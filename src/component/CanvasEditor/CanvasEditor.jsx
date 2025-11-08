@@ -15,15 +15,12 @@ const FONTS = [
   { id: "f5", name: "Lobster", css: "'Lobster', cursive" },
 ];
 
-export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
+export default function CanvasEditor({ shirtUrl, onDesignReady }) {
   const canvasRef = useRef(null);
   const editDivRef = useRef(null);
+  const wrapperRef = useRef(null);
 
-  /* ---------- Images ---------- */
   const [shirtImg, setShirtImg] = useState(null);
-  
-
-  /* ---------- Text state ---------- */
   const [font, setFont] = useState(FONTS[0]);
   const [color, setColor] = useState("#000000");
   const [size, setSize] = useState(30);
@@ -31,15 +28,11 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
   const [textX, setTextX] = useState(250);
   const [textY, setTextY] = useState(420);
   const [dragging, setDragging] = useState(false);
-
-  /* ---------- Toolbar ---------- */
   const [toolbarOpen, setToolbarOpen] = useState(false);
-
-  /* ---------- Inline edit ---------- */
   const [editing, setEditing] = useState(false);
-  const [charCount, setCharCount] = useState(text.replace(/\n/g, "").length);
+  const [charCount, setCharCount] = useState(0);
 
-  /* ---------- Load images ---------- */
+  // Load shirt
   useEffect(() => {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -48,8 +41,7 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
     img.onerror = () => setShirtImg(null);
   }, [shirtUrl]);
 
-
-  /* ---------- Draw (skip text while editing) ---------- */
+  // Draw canvas
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -58,7 +50,6 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
 
     ctx.clearRect(0, 0, 500, 600);
 
-    // Shirt
     if (shirtImg) {
       ctx.drawImage(shirtImg, 0, 0, 500, 600);
     } else {
@@ -66,7 +57,6 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
       ctx.fillRect(0, 0, 500, 600);
     }
 
-    // Draw text only when NOT editing
     if (!editing) {
       ctx.font = `${size}px ${font.css}`;
       ctx.fillStyle = color;
@@ -83,22 +73,39 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
         );
       });
     }
-  }, [
-    shirtImg,
-    text,
-    font,
-    color,
-    size,
-    textX,
-    textY,
-    editing,
-  ]);
+  }, [shirtImg, text, font, color, size, textX, textY, editing]);
 
   useEffect(() => {
     draw();
   }, [draw]);
 
-  /* ---------- Finish editing ---------- */
+  // Start editing
+  const startEdit = useCallback(() => {
+    setEditing(true);
+    setToolbarOpen(true);
+    setCharCount(text.replace(/\n/g, "").length);
+
+    if (wrapperRef.current) {
+      wrapperRef.current.style.pointerEvents = "none";
+    }
+
+    setTimeout(() => {
+      if (editDivRef.current) {
+        editDivRef.current.textContent = text; // set plain text
+        editDivRef.current.focus();
+
+        // Place cursor at end
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(editDivRef.current);
+        range.collapse(false);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    }, 0);
+  }, [text]);
+
+  // Finish editing
   const finishEdit = useCallback(() => {
     if (editDivRef.current) {
       const raw = editDivRef.current.innerText.replace(/\n$/, "");
@@ -107,9 +114,12 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
       setCharCount(clean.replace(/\n/g, "").length);
     }
     setEditing(false);
+    if (wrapperRef.current) {
+      wrapperRef.current.style.pointerEvents = "auto";
+    }
   }, []);
 
-  /* ---------- Inline edit – key handling & counter ---------- */
+  // Character limit
   const handleEditKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -131,7 +141,7 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
     }
   };
 
-  /* ---------- Mouse / Drag ---------- */
+  // Mouse events
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -140,7 +150,6 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-
       if (Math.hypot(x - textX, y - textY) < 80) {
         setDragging(true);
       }
@@ -174,9 +183,7 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
     };
 
     const onDblClick = () => {
-      setEditing(true);
-      setToolbarOpen(true);
-      setTimeout(() => editDivRef.current?.focus(), 0);
+      startEdit();
     };
 
     canvas.addEventListener("mousedown", onMouseDown);
@@ -192,19 +199,17 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
       canvas.removeEventListener("click", onClick);
       canvas.removeEventListener("dblclick", onDblClick);
     };
-  }, [dragging, textX, textY, size, text, toolbarOpen, finishEdit]);
+  }, [dragging, textX, textY, size, text, toolbarOpen, startEdit]);
 
-  /* ---------- Export ---------- */
+  // Export
   const exportDesign = () => {
     const dataUrl = canvasRef.current?.toDataURL("image/png") || "";
     onDesignReady?.(dataUrl);
   };
 
-  /* ---------- Render ---------- */
   return (
     <div className={styles.canvasSection}>
-      {/* Canvas + Inline Edit Overlay */}
-      <div style={{ position: "relative", display: "inline-block" }}>
+      <div ref={wrapperRef} style={{ position: "relative", display: "inline-block" }}>
         <canvas
           ref={canvasRef}
           width={500}
@@ -217,7 +222,7 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
           }}
         />
 
-        {/* Inline Edit (contenteditable) */}
+        {/* Inline Editor – NO dangerouslySetInnerHTML */}
         {editing && (
           <div
             ref={editDivRef}
@@ -243,15 +248,13 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
               cursor: "text",
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
-            }}
-            dangerouslySetInnerHTML={{
-              __html: text.replace(/\n/g, "<br>"),
+              userSelect: "text",
             }}
           />
         )}
       </div>
 
-      {/* Font Tabs (always visible) */}
+      {/* Font Tabs */}
       <div className={styles.fontTabs}>
         {FONTS.map((f, i) => (
           <button
@@ -265,11 +268,10 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
         ))}
       </div>
 
-      {/* Toolbar (opens on click) */}
+      {/* Toolbar */}
       {toolbarOpen && (
         <div className={styles.bottomToolbar}>
           <div className={styles.toolbarGroup}>
-            {/* Font Size */}
             <div className={styles.toolItem}>
               <span className={styles.icon}>A</span>
               <input
@@ -285,16 +287,9 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
 
             <div className={styles.divider} />
 
-            {/* Colour */}
             <div className={styles.toolItem}>
               <span className={styles.icon}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M8 0a.5.5 0 0 1 .47.33L11.09 7H4.91L7.53.33A.5.5 0 0 1 8 0zM4.5 8h7a.5.5 0 0 1 .47.67L9.41 15H6.59L4.03 8.67A.5.5 0 0 1 4.5 8z" />
                 </svg>
               </span>
@@ -308,11 +303,8 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
 
             <div className={styles.divider} />
 
-            {/* Font Family Dropdown */}
             <div className={styles.toolItem}>
-              <span className={styles.icon} style={{ fontSize: "22px" }}>
-                f
-              </span>
+              <span className={styles.icon} style={{ fontSize: "22px" }}>f</span>
               <select
                 value={font.id}
                 onChange={(e) => {
@@ -331,25 +323,15 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
 
             <div className={styles.divider} />
 
-            {/* Character Counter */}
             <div className={styles.toolItem}>
-              <span className={styles.label}>
-                {charCount}/40
-              </span>
+              <span className={styles.label}>{charCount}/40</span>
             </div>
 
             <div className={styles.divider} />
 
-            {/* Edit Hint */}
             <div className={styles.toolItem}>
               <span className={styles.icon}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M3 2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H3zm10 10H3V4h10v8z" />
                   <path d="M5 5h2v2H5V5zm4 0h2v2H9V5zM5 9h2v2H5V9zm4 9h2v2H9V9z" />
                 </svg>
@@ -358,18 +340,11 @@ export default function CanvasEditor({ shirtUrl, batmanUrl, onDesignReady }) {
             </div>
           </div>
 
-          <button
-            className={styles.closeButton}
-            onClick={() => setToolbarOpen(false)}
-          >
-            ×
+          <button className={styles.closeButton} onClick={() => setToolbarOpen(false)}>
+            X
           </button>
         </div>
       )}
-
-      <button onClick={exportDesign} style={{ marginTop: "1rem" }}>
-        Export Design
-      </button>
     </div>
   );
 }
