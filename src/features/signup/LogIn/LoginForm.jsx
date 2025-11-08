@@ -23,10 +23,13 @@ const LoginForm = ({ onContinue }) => {
       console.log(recaptchaToken, "sjjususuu");
       // Send both phone number + recaptcha token to Node backend
       const res = await axios.post(
-        `https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=AIzaSyCw7SvFOvbWYQrUtv6CS35GatPAew3KSIk`,
+        `https://identitytoolkit.googleapis.com/v1/accounts:sendVerificationCode?key=AIzaSyC-mvRzLqUwy4vddFlEXFvLEdiR1QvFFMk`,
         {
           phoneNumber: `+91${phoneNumber}`,
           recaptchaToken,
+          captchaResponse: "NO_RECAPTCHA",
+          clientType: "CLIENT_TYPE_WEB",
+          recaptchaVersion: "RECAPTCHA_ENTERPRISE",
         },
         {
           headers: {
