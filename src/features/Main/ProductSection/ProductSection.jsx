@@ -31,11 +31,10 @@ const ProductSection = () => {
     }
   };
 
-  // 🟩 Fetch Products
   const getProductList = async () => {
     try {
       const res = await api.get(
-        `${apiUrl}/v2/product/category/H8SZ4VfsFXa4C9cUeonB`,
+        `/v2/product/category/H8SZ4VfsFXa4C9cUeonB`,
         {
           headers: {
             "x-api-key":

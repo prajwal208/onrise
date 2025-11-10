@@ -4,34 +4,7 @@ import styles from "./OfferMarquee.module.scss";
 import api from "@/axiosInstance/axiosInstance";
 
 const OfferMarquee = () => {
-  const offers = {
-    data: [
-      {
-        id: "LDs8zA0heR40uBizhIjr",
-        headline: "🚚 Free Shipping on orders above ₹500",
-        isActive: true,
-      },
-      {
-        id: "Mjz2PNUSocHjBPlFr4aO",
-        headline:
-          "👜 Customized Tote Pouch with Rhinestone Initial on orders above ₹900",
-        isActive: true,
-      },
-      {
-        id: "OpwWGX4u9f0H1rH6BPqi",
-        headline: "🎁 Free Gift + 10% OFF on orders above ₹600",
-        isActive: true,
-      },
-      {
-        id: "oDgQeFvb8Mq0MLPOCFcJ",
-        headline: "💥 Flat 20% OFF on all products sitewide!",
-        isActive: true,
-      },
-    ],
-  };
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const [offerData,setOfferData]= useState([])
+  const [offerData,setOfferData]= useState([]);
 
   const getOfferData = async () => {
     try {

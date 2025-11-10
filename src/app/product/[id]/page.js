@@ -18,7 +18,7 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
   const [designPng, setDesignPng] = useState("");
-
+  console.log(product,"jsjshjshytterrewww")
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
@@ -39,35 +39,66 @@ const ProductDetails = () => {
   }, [id, apiUrl]);
 
   const addToCart = async () => {
-    if (product?.configuration?.length > 0 && !selectedSize) {
-      alert("Please select a size.");
-      return;
-    }
+  if (product?.configuration?.length > 0 && !selectedSize) {
+    alert("Please select a size.");
+    return;
+  }
 
-    const payload = {
-      id: nanoid(),
-      productId: product.id,
-      quantity,
-      designPng, // <-- custom design
-      options: [{ value: selectedSize || "default" }],
-      // ... other fields
-    };
-
-    try {
-      setLoading(true);
-      await api.post(`${apiUrl}/v1/cart`, payload, {
-        headers: {
-          "x-api-key":
-            "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
-        },
-      });
-      alert("Added to cart!");
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const payload = {
+    productId: product.id,
+    categoryId: product.categoryId,
+    name: product.name,
+    sku: product.sku,
+    quantity,
+    basePrice: product.basePrice,
+    discountPrice: product.discountedPrice || product.basePrice,
+    totalPrice:
+      (product.discountedPrice || product.basePrice) * quantity,
+    isCustomizable: product.isCustomizable,
+    productImageUrl: product.productImages?.[0] || product.canvasImage || "",
+    imageUrl: product.canvasImage || "",
+    dimensions: {
+      length: product.dimension?.length || 0,
+      width: product.dimension?.width || 0,
+      height: product.dimension?.height || 0,
+      weight: product.dimension?.weight || 0,
+    },
+    options: [
+      {
+        id: "",
+        label: "Size",
+        value: "size",
+        options: product.configuration?.[0]?.options
+          ?.filter((opt) => opt.value === selectedSize)
+          .map((opt) => ({
+            id: "",
+            label: opt.label,
+            value: opt.value,
+            options: opt.options || [],
+          })) || [],
+      },
+    ],
+    designPng: designPng || "",
   };
+
+  console.log("🛒 Cart Payload:", payload);
+
+  try {
+    setLoading(true);
+    await api.post(`${apiUrl}/v1/cart`, payload, {
+      headers: {
+        "x-api-key":
+          "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+      },
+    });
+    alert("Added to cart!");
+  } catch (err) {
+    console.error("❌ Error adding to cart:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (!product) return <div className={styles.loading}>Loading...</div>;
 
