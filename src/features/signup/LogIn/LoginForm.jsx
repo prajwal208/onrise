@@ -84,7 +84,7 @@ const LoginForm = ({ onContinue }) => {
       {!otpSent ? (
         <>
           <h2 className={styles.title}>
-            Welcome! Enter your phone number to continue.
+           Glad to have you at Print Easy. Stay tuned for exclusive offers & updates
           </h2>
           <input
             type="text"
@@ -102,8 +102,8 @@ const LoginForm = ({ onContinue }) => {
         <>
           <OTPModal
             phoneNumber={phoneNumber}
-            otp={otp} // pass state down
-            setOtp={setOtp} // pass setter
+            otp={otp} 
+            setOtp={setOtp}
             handleVerifyOtp={handleVerifyOtp}
           />
         </>

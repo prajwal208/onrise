@@ -15,6 +15,7 @@ import Image from "next/image";
 import logo from "@/assessts/light-2x.webp";
 import DynamicModal from "@/component/Modal/Modal";
 import LoginForm from "@/features/signup/LogIn/LoginForm";
+import Logout from "@/features/signup/Logout/Logout";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 
@@ -24,13 +25,13 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
+  // 🔹 Check if user is logged in
   useEffect(() => {
     const token = Cookies.get("idToken");
     setIsLoggedIn(!!token);
   }, []);
 
   const navItems = [
-    { icon: User, label: "Profile", link: "/" },
     { icon: Briefcase, label: "Orders", link: "/orders" },
     { icon: MapPin, label: "Address", link: "/address" },
     { icon: Heart, label: "Wishlist", link: "/wishlist" },
@@ -38,6 +39,13 @@ const Navbar = () => {
   ];
 
   const handleIconClick = (label, link) => {
+    // 👇 For profile, open login/logout modal — no redirect
+    if (label === "Profile") {
+      setIsLoginModalVisible(true);
+      return;
+    }
+
+    // 👇 For all other icons, check login first
     if (!isLoggedIn) {
       setIsLoginModalVisible(true);
     } else {
@@ -46,13 +54,25 @@ const Navbar = () => {
   };
 
   const handleContinue = () => {
+    // After successful login
     setIsLoginModalVisible(false);
     setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    // 👇 Clear all storage and cookies
+    Cookies.remove("idToken");
+    localStorage.clear();
+    sessionStorage.clear();
+
+    setIsLoggedIn(false);
+    setIsLoginModalVisible(false);
   };
 
   return (
     <>
       <nav className={styles.nav}>
+        {/* Logo */}
         <header className={styles.logoWrapper} onClick={() => router.push("/")}>
           <Image src={logo} alt="logo" className={styles.logo} />
         </header>
@@ -64,6 +84,16 @@ const Navbar = () => {
 
         {/* Menu */}
         <ul className={`${styles.iconList} ${menuOpen ? styles.active : ""}`}>
+          {/* Profile icon — opens login/logout modal */}
+          <li
+            className={styles.iconItem}
+            onClick={() => handleIconClick("Profile")}
+          >
+            <User size={20} />
+            <span>Profile</span>
+          </li>
+
+          {/* Other nav items */}
           {navItems.map(({ icon: Icon, label, link }, index) => (
             <li
               key={index}
@@ -77,11 +107,22 @@ const Navbar = () => {
         </ul>
       </nav>
 
+      {/* Modal for login/logout */}
       <DynamicModal
-        open={isLoginModalVisible && !isLoggedIn}
+        open={isLoginModalVisible}
         onClose={() => setIsLoginModalVisible(false)}
       >
-        <LoginForm onContinue={handleContinue} setIsLoginModalVisible={setIsLoginModalVisible} />
+        {isLoggedIn ? (
+          <Logout
+            onLogout={handleLogout}
+            onCancel={() => setIsLoginModalVisible(false)}
+          />
+        ) : (
+          <LoginForm
+            onContinue={handleContinue}
+            setIsLoginModalVisible={setIsLoginModalVisible}
+          />
+        )}
       </DynamicModal>
     </>
   );
