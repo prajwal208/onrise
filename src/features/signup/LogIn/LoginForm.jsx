@@ -84,8 +84,17 @@ const LoginForm = ({ onContinue }) => {
       {!otpSent ? (
         <>
           <h2 className={styles.title}>
-           Glad to have you at Print Easy. Stay tuned for exclusive offers & updates
+            Glad to have you at Print Easy. Stay tuned for exclusive offers & updates!
           </h2>
+          
+          <div className={styles.divider}>
+            <span className={styles.dividerText}>Login or Signup</span>
+          </div>
+
+          <p className={styles.subtitle}>
+            Use your email or another service to continue, signing up is free!
+          </p>
+
           <input
             type="text"
             placeholder="Enter Mobile Number"
@@ -93,10 +102,18 @@ const LoginForm = ({ onContinue }) => {
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
           />
+          
           <div id="recaptcha-container"></div>
+          
           <button className={styles.continueBtn} onClick={handleSendOtp}>
-            Send OTP
+            Continue
           </button>
+
+          <p className={styles.terms}>
+            By signing in you agree to our{" "}
+            <a href="/terms" target="_blank">Terms of Service</a> and{" "}
+            <a href="/privacy" target="_blank">Privacy Policy</a>
+          </p>
         </>
       ) : (
         <>

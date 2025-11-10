@@ -1,45 +1,75 @@
 .loginForm {
-  text-align: center;
+  max-width: 450px;
+  width: 100%;
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: #222;
-  line-height: 1.5;
-  margin-bottom: 12px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.4;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
 
-  span {
-    color: #c45a00;
-    font-weight: 600;
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 1rem 0;
+  
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background-color: #d1d5db;
+  }
+  
+  &::before {
+    left: 0;
+  }
+  
+  &::after {
+    right: 0;
   }
 }
 
-.subtitle {
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: #333;
-  margin-bottom: 6px;
+.dividerText {
+  display: inline-block;
+  padding: 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1a1a1a;
+  background-color: #ffffff;
 }
 
-.helper {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 16px;
+.subtitle {
+  font-size: 0.875rem;
+  color: #4a4a4a;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  text-align: left;
 }
 
 .input {
   width: 100%;
-  border: 1px solid #ccc;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 0.875rem 1rem;
   font-size: 0.95rem;
-  margin-bottom: 16px;
-  transition: border-color 0.2s ease;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
 
   &:focus {
     border-color: #ff7b00;
     outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 123, 0, 0.1);
   }
 }
 
@@ -51,23 +81,30 @@
   border-radius: 8px;
   font-weight: 600;
   font-size: 1rem;
-  padding: 10px;
+  padding: 0.875rem;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
 
   &:hover {
     background: #e66f00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 123, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 
 .terms {
   font-size: 0.8rem;
-  color: #777;
-  margin-top: 14px;
-  line-height: 1.4;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.5;
 
   a {
-    color: #ff7b00;
+    color: #3b82f6;
     text-decoration: none;
     font-weight: 500;
 
@@ -77,4 +114,20 @@
   }
 }
 
+.error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
 
+// Responsive adjustments
+@media (max-width: 640px) {
+  .loginForm {
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.15rem;
+  }
+}

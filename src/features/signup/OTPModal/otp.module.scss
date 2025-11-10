@@ -1,7 +1,6 @@
 .otpModal {
   text-align: center;
   background: #fff;
-  padding: 2rem;
   border-radius: 16px;
   width: 100%;
 
@@ -34,9 +33,26 @@
   }
 
   .submitBtn{
-    width: 100%;
-    padding: 0.5rem;
-    color: #fff;
-    background-color: #b76e09;
+   width: 100%;
+  background: #ff7b00;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+margin-top: 1rem;
+  &:hover {
+    background: #e66f00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 123, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
   }
 }

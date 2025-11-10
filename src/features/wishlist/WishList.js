@@ -4,10 +4,13 @@ import React, { useEffect, useState } from "react";
 import styles from "./wishlist.module.scss";
 import ProductCard from "@/component/ProductCard/ProductCard";
 import api from "@/axiosInstance/axiosInstance";
+import NoResult from "@/component/NoResult/NoResult";
+import { useRouter } from "next/navigation";
 
 const WishList = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [wishlistData, setWishListData] = useState([]);
+  const router = useRouter();
 
   const getwishList = async () => {
     try {
@@ -27,22 +30,32 @@ const WishList = () => {
     getwishList();
   }, []);
 
-
-
-
   return (
     <>
       <main className={styles.wishlist_main}>
-        <h1>Your WishList</h1>
-        <div className={styles.cardGrid}>
-          {wishlistData.length > 0 ? (
-            wishlistData.map((item) => (
-              <ProductCard key={item.id} item={item} getwishList={getwishList}/>
-            ))
-          ) : (
-            <p className={styles.noProducts}>No WishList found.</p>
-          )}
-        </div>
+
+        {wishlistData?.length > 0 ? (
+          <div className={styles.cardGrid}>
+            {wishlistData.map((item) => (
+              <ProductCard
+                key={item.id}
+                item={item}
+                getwishList={getwishList}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.noProducts}>
+            <NoResult
+              title={"Your Wishlist is Empty"}
+              description={
+                "Looks like you haven’t added anything to your wishlist yet. Start exploring and save your favorite items to view them here later."
+              }
+              buttonText={"Explore Now"}
+              onButtonClick={() => router.push("/")}
+            />
+          </div>
+        )}
       </main>
     </>
   );
