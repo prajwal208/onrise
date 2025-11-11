@@ -18,6 +18,11 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
   const [designPng, setDesignPng] = useState("");
+  const [printingImg,setPrintingImg]= useState({
+    textColor:"",
+    fontFamily:"",
+    printText:"",
+  })
   console.log(product,"jsjshjshytterrewww")
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -56,7 +61,6 @@ const ProductDetails = () => {
       (product.discountedPrice || product.basePrice) * quantity,
     isCustomizable: product.isCustomizable,
     productImageUrl: product.productImages?.[0] || product.canvasImage || "",
-    imageUrl: product.canvasImage || "",
     dimensions: {
       length: product.dimension?.length || 0,
       width: product.dimension?.width || 0,
@@ -79,6 +83,7 @@ const ProductDetails = () => {
       },
     ],
     designPng: designPng || "",
+    illustrationImage:product?.illustrationImage
   };
 
   console.log("🛒 Cart Payload:", payload);
@@ -109,7 +114,7 @@ const ProductDetails = () => {
   return (
     <div className={styles.container}>
       {product?.isCustomizable ? (
-        <CanvasEditor product={product} onDesignChange={handleDesignChange} />
+        <CanvasEditor product={product} onDesignChange={handleDesignChange} setPrintingImg={setPrintingImg}/>
       ) : (
         <Image
           src={product.canvasImage}
