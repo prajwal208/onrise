@@ -1,93 +1,137 @@
 .footer {
-  background-color: #ff6b00;
+  background-color: #e86b1e;
   color: #fff;
-  text-align: center;
-  padding: 3rem 1rem;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
   font-family: "Poppins", sans-serif;
+  padding: 3rem 6rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
 
-  .footerContent {
+  .socialIcons {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-  }
+    justify-content: center;
+    gap: 1.2rem;
+    margin-bottom: 2rem;
 
-  .logoSection {
-    .logo {
-      filter: brightness(0) invert(1);
+    a {
+      background: #fff;
+      border-radius: 6px;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e86b1e;
+      transition: all 0.3s ease;
+
+      svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      &:hover {
+        background-color: #f7f7f7;
+        transform: scale(1.1);
+      }
     }
   }
 
-  .columns {
+  /* ✅ FIXED layout for content area */
+  .footerContent {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: flex-start;
     flex-wrap: wrap;
-    gap: 10rem;
     width: 100%;
+    max-width: 1200px;
+    margin-bottom: 2rem;
+    gap: 6rem; // creates consistent spacing between columns
+  }
 
-    .column {
-      text-align: left;
+  .contactSection {
+    flex: 1;
+    min-width: 300px;
+    max-width: 600px;
 
-      h3 {
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin-bottom: 0.8rem;
+    h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    .contactItem {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin-bottom: 0.6rem;
+
+      svg {
+        margin-top: 2px;
       }
 
-      ul {
-        list-style: none;
-        padding: 0;
+      p {
+        margin: 0;
+        font-size: 0.95rem;
+        line-height: 1.4;
+      }
+    }
+  }
 
-        li {
-          font-size: 0.95rem;
-          margin-bottom: 0.4rem;
-          cursor: pointer;
-          transition: opacity 0.3s ease;
+  .quickLinks {
+    flex: 0 0 220px; // ✅ fixed width so it aligns to the right neatly
+    text-align: left;
 
-          &:hover {
-            opacity: 0.8;
-          }
+    h3 {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+
+      li {
+        font-size: 0.95rem;
+        margin-bottom: 0.6rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          text-decoration: underline;
         }
       }
     }
   }
 
-  .socials {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    margin-top: 1rem;
-
-    a {
-      font-size: 1.4rem;
-      color: #fff;
-      transition: transform 0.3s ease, color 0.3s ease;
-
-      &:hover {
-        transform: scale(1.2);
-        color: #000;
-      }
-    }
-  }
-
-  .copy {
+  .copyRight {
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    text-align: center;
+    width: 100%;
+    padding-top: 1rem;
     font-size: 0.9rem;
     opacity: 0.9;
-    margin-top: 2rem;
   }
 }
 
+/* ✅ Responsive view */
 @media (max-width: 768px) {
   .footer {
-    .columns {
-      flex-direction: column;
-      align-items: center;
-      gap: 2rem;
+    padding: 2rem 1.5rem;
 
-      .column {
-        text-align: center;
+    .footerContent {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2rem;
+    }
+
+    .quickLinks {
+      flex: 1;
+      width: 100%;
+
+      ul li {
+        font-size: 1rem;
       }
     }
   }

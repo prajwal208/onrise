@@ -39,7 +39,7 @@ const CategoryGrid = () => {
       <section className={styles.gridWrapper}>
         {categories.map((item) => (
           <div onClick={() => {handleCardClick(item?.id)}}>
-            <CategoryCard key={item.name} image={item.image} title={item.name} />
+            <CategoryCard key={item.id} image={item.image} title={item.name} />
           </div>
         ))}
       </section>
