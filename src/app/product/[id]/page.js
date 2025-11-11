@@ -22,6 +22,7 @@ const ProductDetails = () => {
     textColor:"",
     fontFamily:"",
     printText:"",
+    fontSize:""
   })
   console.log(product,"jsjshjshytterrewww")
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -82,8 +83,8 @@ const ProductDetails = () => {
           })) || [],
       },
     ],
-    designPng: designPng || "",
-    illustrationImage:product?.illustrationImage
+    illustrationImage:product?.illustrationImage,
+    printingImgText:printingImg
   };
 
   console.log("🛒 Cart Payload:", payload);

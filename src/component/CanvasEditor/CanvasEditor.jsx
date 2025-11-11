@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Maximize2, Palette, Type, Edit3 } from 'lucide-react';
 
-const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
+const CanvasEditor = ({ product, onDesignChange, setPrintingImg }) => {
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -12,7 +12,7 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
   const fontSizes = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
 
   // -----------------------------------------------------------------
-  //  Fabric init (once)
+  //  Fabric init
   // -----------------------------------------------------------------
   useEffect(() => {
     const script = document.createElement('script');
@@ -52,7 +52,7 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
       );
     }
 
-    // Double-click to edit (backup)
+    // Double-click to edit
     canvas.on('mouse:dblclick', (e) => {
       const obj = e.target;
       if (obj && obj.type === 'i-text') {
@@ -62,19 +62,34 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
       }
     });
 
-    // Export on change
+    // Export + Update Parent State (on every change)
     const exportDesign = () => {
       const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
       onDesignChange?.(dataURL);
     };
-    canvas.on('text:changed', exportDesign);
+
+    // **UPDATE printText ON EVERY KEYSTROKE**
+    canvas.on('text:changed', (e) => {
+      const textObj = e.target;
+      if (textObj && textObj.type === 'i-text') {
+        setPrintingImg(prev => ({
+          ...prev,
+          printText: textObj.text,
+          fontFamily: textObj.fontFamily,
+          textColor: textObj.fill,
+          fontSize: textObj.fontSize,
+        }));
+      }
+      exportDesign();
+    });
+
     canvas.on('text:editing:exited', exportDesign);
 
     setIsLoading(false);
   };
 
   // -----------------------------------------------------------------
-  //  Add Illustration + Fixed Text (150px width, locked)
+  //  Add Illustration + Fixed Text (150px width)
   // -----------------------------------------------------------------
   const TEXT_WIDTH = 150;
   const TEXT_TOP_OFFSET = 30;
@@ -146,10 +161,18 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
     canvas.add(text);
     canvas.renderAll();
     exportDesign();
+
+    // **Initialize parent state**
+    setPrintingImg({
+      printText: text.text,
+      fontFamily: text.fontFamily,
+      textColor: text.fill,
+      fontSize: text.fontSize,
+    });
   };
 
   // -----------------------------------------------------------------
-  //  Controls
+  //  Controls – Update Canvas + Parent State
   // -----------------------------------------------------------------
   const updateFontSize = (size) => {
     setFontSize(size);
@@ -158,6 +181,10 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
       text.set({ fontSize: size });
       fabricCanvasRef.current.renderAll();
       exportDesign();
+      setPrintingImg(prev => ({
+        ...prev,
+        fontSize: size,
+      }));
     }
   };
 
@@ -168,6 +195,10 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
       text.set({ fill: color });
       fabricCanvasRef.current.renderAll();
       exportDesign();
+      setPrintingImg(prev => ({
+        ...prev,
+        textColor: color,
+      }));
     }
   };
 
@@ -177,6 +208,10 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
       text.set({ fontFamily: family });
       fabricCanvasRef.current.renderAll();
       exportDesign();
+      setPrintingImg(prev => ({
+        ...prev,
+        fontFamily: family,
+      }));
     }
   };
 
@@ -195,7 +230,7 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
   };
 
   // -----------------------------------------------------------------
-  //  UI – EXACTLY AS IN YOUR IMAGE (NO EXTRA BUTTON)
+  //  UI – Edit Tab = Instant Cursor
   // -----------------------------------------------------------------
   return (
     <div style={{ position: 'relative' }}>
@@ -210,7 +245,24 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
         }}
       >
         <canvas ref={canvasRef} />
-       
+        {!isLoading && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 10,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              padding: '6px 14px',
+              borderRadius: 20,
+              fontSize: 12,
+              pointerEvents: 'none',
+            }}
+          >
+            Double-click text to edit
+          </div>
+        )}
       </div>
 
       {isLoading && (
@@ -290,7 +342,7 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
                 onClick={() => {
                   setActiveBottomTab(tab.id);
                   if (tab.id === 'edit') {
-                    startEditing(); // Cursor appears instantly
+                    startEditing();
                   }
                 }}
                 style={{
@@ -318,7 +370,7 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
           })}
         </div>
 
-        {/* PANEL CONTENT – NO BUTTONS IN EDIT TAB */}
+        {/* PANEL CONTENT */}
         <div style={{ minHeight: 130 }}>
           {activeBottomTab === 'size' && (
             <div>
@@ -402,7 +454,6 @@ const CanvasEditor = ({ product, onDesignChange,setPrintingImg }) => {
             </div>
           )}
 
-          {/* EDIT TAB – ONLY SHOWS HINT, NO BUTTON */}
           {activeBottomTab === 'edit' && (
             <div style={{ textAlign: 'center', padding: 20 }}>
               <Edit3 size={44} style={{ color: '#999', marginBottom: 8 }} />
