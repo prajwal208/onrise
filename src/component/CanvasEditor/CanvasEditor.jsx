@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Maximize2, Palette, Type, Edit3 } from "lucide-react";
 
 const PLACEHOLDER = "Enter text here";
-const MAX_CHARS = 40;
+const MAX_CHARS = 50;
 const TEXT_PADDING = 20; // padding inside canvas for text
 
 const CanvasEditor = ({ product, onDesignChange, setPrintingImg }) => {
