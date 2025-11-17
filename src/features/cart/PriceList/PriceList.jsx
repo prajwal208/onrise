@@ -1,7 +1,7 @@
 import React from 'react'
 import styles from './pricelist.module.scss'
 
-const PriceList = ({bagTotal,grandTotal}) => {
+const PriceList = ({bagTotal,grandTotal,handlePayNow}) => {
   return (
     <>
        <div className={styles.priceDetails}>
@@ -25,7 +25,7 @@ const PriceList = ({bagTotal,grandTotal}) => {
                   <span>₹{grandTotal}</span>
                 </div>
 
-                <button className={styles.payBtn}>PAY ₹ {grandTotal}</button>
+                <button className={styles.payBtn} onClick={handlePayNow}>PAY ₹ {grandTotal}</button>
               </div>
             </div>
     </>

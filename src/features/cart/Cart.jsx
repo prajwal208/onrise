@@ -2,12 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import styles from "./cart.module.scss";
-import api from "@/axiosInstance/axiosInstance";
 import NoResult from "@/component/NoResult/NoResult";
 import { useRouter } from "next/navigation";
 import CartRewards from "./CartRewards/CartRewards";
 import DefaultAddress from "./DefaultAddress/DefaultAddress";
 import PriceList from "./PriceList/PriceList";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import api from "@/axiosInstance/axiosInstance";
 
 const Cart = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -15,7 +17,8 @@ const Cart = () => {
   const [addressList, setAddressList] = useState([]);
   const router = useRouter();
 
-  // 🧮 Update item quantity
+  console.log(cartItems[0]?.id,"sjsjueyeynnbbcvcv")
+
   const handleQuantityChange = (id, newQuantity) => {
     if (newQuantity < 1) return;
     setCartItems((prev) =>
@@ -25,7 +28,6 @@ const Cart = () => {
     );
   };
 
-  // 💰 Calculate total price
   const calculateTotal = () => {
     return cartItems.reduce((sum, item) => {
       const price =
@@ -42,23 +44,21 @@ const Cart = () => {
   const couponDiscount = 0;
   const grandTotal = bagTotal - couponDiscount;
 
-  // 🛒 Fetch Cart Data
   const getCartData = async () => {
     try {
-      const res = await api.get(`${apiUrl}/v1/cart`, {
+      const res = await api.get(`/v1/cart`, {
         headers: {
           "x-api-key":
             "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
         },
       });
-      console.log(res.data.data, "🧾 Cart API Response");
       setCartItems(res?.data?.data || []);
     } catch (error) {
       console.error("❌ Error fetching cart:", error);
+      toast.error("Failed to fetch cart.");
     }
   };
 
-  // 🗑️ Delete Item
   const handleDelete = async (id) => {
     try {
       await api.delete(`/v1/cart?itemId=${id}`, {
@@ -68,12 +68,13 @@ const Cart = () => {
         },
       });
       setCartItems((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Item removed from cart.");
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      toast.error("Failed to remove item.");
     }
   };
 
-  // 🏠 Get Address List
   const getAddressList = async () => {
     try {
       const res = await api.get(`/v1/address/all`, {
@@ -84,23 +85,98 @@ const Cart = () => {
       });
       setAddressList(res?.data?.data || []);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
+
+  console.log(addressList?.[0]?.id,"sjsjueyeterrxxx")
 
   useEffect(() => {
     getCartData();
     getAddressList();
   }, []);
 
+  // ----------------- Razorpay Integration -----------------
+  const handlePayNow = async () => {
+    if (cartItems.length === 0) {
+      toast.warning("Your cart is empty!");
+      return;
+    }
+
+    try {
+      const res = await api.post(`/v1/orders/create`,
+        {
+          shippingAddressId: addressList?.[0].id,
+          billingAddressId: addressList?.[0].id,
+          cartIds: cartItems.map(item => item.id),
+          // couponCode: "",
+          items:[],
+          paymentMethod: "ONLINE",
+          totalAmount:grandTotal,
+        },
+        {
+          headers: {
+            "x-api-key":
+              "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+          },
+        }
+      );
+
+      const { orderId, currency } = res.data.data;
+
+      // Step 2: Open Razorpay Checkout
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
+        amount: grandTotal * 100,
+        currency: currency || "INR",
+        name: "Your Store Name",
+        description: "Order Payment",
+        order_id: orderId,
+        handler: async function (response) {
+          // Step 3: Capture payment on backend
+          try {
+            await api.post(`/v1/payment/verify`,
+              { ...response, cartItems },
+              {
+                headers: {
+                  "x-api-key":
+                    "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+                },
+              }
+            );
+            toast.success("Payment successful!");
+            router.push("/order/success");
+          } catch (err) {
+            console.error(err);
+            toast.error("Payment verification failed!");
+          }
+        },
+        prefill: {
+          name: "John Doe",
+          email: "john@example.com",
+          contact: "9999999999",
+        },
+        theme: {
+          color: "#ff6b00",
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to initiate payment.");
+    }
+  };
+
   return (
     <div className={styles.cartPage}>
+      <ToastContainer position="top-right" autoClose={2000} />
       {cartItems?.length > 0 ? (
         <>
           <CartRewards totalAmount={bagTotal} />
 
           <div className={styles.cartContainer}>
-            {/* LEFT: Cart Items */}
             <div className={styles.cartItems}>
               {cartItems.map((item) => (
                 <div key={item.id} className={styles.cartItem}>
@@ -162,13 +238,16 @@ const Cart = () => {
               ))}
             </div>
 
-            {/* RIGHT: Address + Price */}
             <div className={styles.rightSection}>
               <DefaultAddress
                 addressList={addressList}
                 onChange={() => console.log("Change Address Clicked")}
               />
-              <PriceList bagTotal={bagTotal} grandTotal={grandTotal} />
+              <PriceList
+                bagTotal={bagTotal}
+                grandTotal={grandTotal}
+                handlePayNow={handlePayNow}
+              />
             </div>
           </div>
         </>
