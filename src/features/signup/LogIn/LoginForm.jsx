@@ -6,12 +6,14 @@ import { auth } from "@/firebase/config";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import OTPModal from "../OTPModal/OTPModal";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
-const LoginForm = ({ onContinue }) => {
+const LoginForm = ({ onContinue,setIsLoginModalVisible }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [error, setError] = useState("");
+  const router = useRouter()
 
   const setupRecaptcha = () => {
     if (!window.recaptchaVerifier) {
@@ -79,9 +81,14 @@ const LoginForm = ({ onContinue }) => {
     }
   };
 
+  const handleNavigate = (slug) => {
+    router.push(`/info/${slug}`);
+    setIsLoginModalVisible(false) // dynamic route example -> /info/about-us
+  };
+
   return (
     <div className={styles.loginForm}>
-      {otpSent ? (
+      {!otpSent ? (
         <>
           <h2 className={styles.title}>
             Glad to have you at Print Easy. Stay tuned for exclusive offers & updates!
@@ -111,8 +118,8 @@ const LoginForm = ({ onContinue }) => {
 
           <p className={styles.terms}>
             By signing in you agree to our{" "}
-            <a href="/terms" target="_blank">Terms of Service</a> and{" "}
-            <a href="/privacy" target="_blank">Privacy Policy</a>
+            <span  onClick={() => handleNavigate("terms-and-conditions")}>Terms of Service</span> and{" "}
+            <span  onClick={() => handleNavigate("privacy-policy")}>Privacy Policy</span>
           </p>
         </>
       ) : (

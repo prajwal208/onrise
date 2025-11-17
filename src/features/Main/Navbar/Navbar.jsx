@@ -133,11 +133,13 @@ const Navbar = () => {
           <Logout
             onLogout={handleLogout}
             onCancel={() => setIsLoginModalVisible(false)}
+            setIsLoggedIn={setIsLoggedIn}
           />
         ) : (
           <LoginForm
             onContinue={handleContinue}
             setIsLoginModalVisible={setIsLoginModalVisible}
+            setIsLoggedIn={setIsLoggedIn}
           />
         )}
       </DynamicModal>

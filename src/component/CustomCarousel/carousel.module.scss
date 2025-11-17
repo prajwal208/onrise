@@ -1,6 +1,7 @@
 .carousel_main_wrap {
   width: 100%;
-  overflow: hidden;
+  overflow: visible; // 🔹 allow dots to be visible
+  position: relative; // 🔹 make dots position relative
 }
 
 .banner_item {
@@ -19,20 +20,29 @@
   transform: scale(1.02);
 }
 
-/* Dots styling */
+/* Dots styling for all screens */
 :global(.slick-dots) {
-  bottom: 5px;
+  position: absolute;
+  bottom: 10px;
+  display: flex !important;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  z-index: 10; // 🔹 ensure dots are on top
 }
 
 :global(.slick-dots li button:before) {
   font-size: 10px;
-  color: #888;
+  color: #888; // inactive color
+  opacity: 1;
 }
 
 :global(.slick-dots li.slick-active button:before) {
-  color: #000;
+  color: #ff7b00; // active dot color
+  opacity: 1;
 }
-
 
 @media (max-width: 1024px) {
   .banner_image {
@@ -43,5 +53,13 @@
 @media (max-width: 768px) {
   .banner_image {
     height: 35rem;
+  }
+
+  :global(.slick-dots li button:before) {
+    color: #ff7b00; // make all dots orange on mobile
+  }
+
+  :global(.slick-dots li.slick-active button:before) {
+    color: #ff7b00;
   }
 }
