@@ -39,13 +39,13 @@ const Navbar = () => {
   ];
 
   const handleIconClick = (label, link) => {
-    // 👇 For profile, open login/logout modal — no redirect
+    setMenuOpen(false); // 🔥 close menu on every item click
+
     if (label === "Profile") {
       setIsLoginModalVisible(true);
       return;
     }
 
-    // 👇 For all other icons, check login first
     if (!isLoggedIn) {
       setIsLoginModalVisible(true);
     } else {
@@ -69,6 +69,20 @@ const Navbar = () => {
     setIsLoginModalVisible(false);
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(`.${styles.nav}`)) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [menuOpen]);
+
   return (
     <>
       <nav className={styles.nav}>
@@ -78,7 +92,10 @@ const Navbar = () => {
         </header>
 
         {/* Hamburger Icon */}
-        <div className={styles.hamburger} onClick={() => setMenuOpen(!menuOpen)}>
+        <div
+          className={styles.hamburger}
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
           {menuOpen ? <X size={28} /> : <Menu size={28} />}
         </div>
 

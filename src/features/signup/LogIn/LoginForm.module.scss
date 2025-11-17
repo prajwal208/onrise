@@ -121,13 +121,28 @@
   text-align: center;
 }
 
-// Responsive adjustments
+
 @media (max-width: 640px) {
   .loginForm {
-    padding: 1.5rem;
+    padding: 0;
   }
 
   .title {
     font-size: 1.15rem;
+  }
+
+  /* 🔥 FIX: Remove divider lines on small screens */
+  .divider {
+    margin: 0.75rem 0;
+
+    &::before,
+    &::after {
+      display: none;   
+    }
+  }
+
+  .dividerText {
+    padding: 0;        
+    background: none; 
   }
 }

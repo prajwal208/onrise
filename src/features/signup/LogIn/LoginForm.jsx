@@ -81,7 +81,7 @@ const LoginForm = ({ onContinue }) => {
 
   return (
     <div className={styles.loginForm}>
-      {!otpSent ? (
+      {otpSent ? (
         <>
           <h2 className={styles.title}>
             Glad to have you at Print Easy. Stay tuned for exclusive offers & updates!

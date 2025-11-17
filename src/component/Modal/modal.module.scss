@@ -13,7 +13,7 @@
   background: #fff;
   border-radius: 12px;
   width: 500px;
-  max-width: 90%;
+  max-width: 95%;
   padding: 24px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   position: relative;
@@ -63,5 +63,12 @@
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+
+@media screen and (max-width:650px){
+  .modal{
+    padding: 16px;
   }
 }
