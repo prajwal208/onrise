@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./otp.module.scss";
 
-const OTPModal = ({ phoneNumber, otp, setOtp, handleVerifyOtp }) => {
+const OTPModal = ({ phoneNumber, otp, setOtp, handleVerifyOtp, loading }) => {
   const [timer, setTimer] = useState(45);
   const inputRefs = useRef([]);
 
@@ -21,15 +21,11 @@ const OTPModal = ({ phoneNumber, otp, setOtp, handleVerifyOtp }) => {
       newOtp[index] = value;
       setOtp(newOtp);
 
-      // Move to next input if current one is filled
-      if (value && index < 5) {
-        inputRefs.current[index + 1].focus();
-      }
+      if (value && index < 5) inputRefs.current[index + 1].focus();
     }
   };
 
   const handleKeyDown = (e, index) => {
-    // Handle backspace navigation
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1].focus();
     }
@@ -37,15 +33,18 @@ const OTPModal = ({ phoneNumber, otp, setOtp, handleVerifyOtp }) => {
 
   const handleSubmit = () => {
     const otpValue = otp.join("");
-    if (otpValue.length === 6) {
-      handleVerifyOtp(otpValue);
-    } else {
-      alert("Please enter complete OTP");
-    }
+    if (otpValue.length === 6) handleVerifyOtp(otpValue);
+    else alert("Please enter complete OTP");
   };
 
   return (
     <div className={styles.otpModal}>
+      {loading && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loader}></div>
+        </div>
+      )}
+
       <h2>OTP Verification</h2>
       <p>We have sent a verification code to +91 {phoneNumber}</p>
 
@@ -59,11 +58,12 @@ const OTPModal = ({ phoneNumber, otp, setOtp, handleVerifyOtp }) => {
             ref={(el) => (inputRefs.current[i] = el)}
             onChange={(e) => handleChange(e, i)}
             onKeyDown={(e) => handleKeyDown(e, i)}
+            disabled={loading} // prevent typing while verifying
           />
         ))}
       </div>
 
-      <button className={styles.submitBtn} onClick={handleSubmit}>
+      <button className={styles.submitBtn} onClick={handleSubmit} disabled={loading}>
         Verify OTP
       </button>
 

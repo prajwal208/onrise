@@ -12,10 +12,11 @@ const CustomCarousel = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [banners, setBanners] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
-  const [mounted, setMounted] = useState(false); // 👈 ensure client render
+  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true); // shimmer loader
 
   useEffect(() => {
-    setMounted(true); // only true on client
+    setMounted(true); // 👈 only on client
 
     const getImage = async () => {
       try {
@@ -29,13 +30,15 @@ const CustomCarousel = () => {
         setBanners(all);
       } catch (err) {
         console.error("Error fetching banner images:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
     getImage();
 
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize(); // initial check
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -66,23 +69,31 @@ const CustomCarousel = () => {
     arrows: true,
   };
 
-  if (!mounted || banners.length === 0) return null; // 👈 wait for client + banners
+  // Wait for client mount
+  if (!mounted) return null;
+
+  // Skeleton slides while loading
+  const skeletonSlides = Array.from({ length: 3 }).map((_, i) => (
+    <div key={i} className={styles.skeletonSlide}></div>
+  ));
 
   return (
     <main className={styles.carousel_main_wrap}>
       <Slider {...(isMobile ? mobileSettings : desktopSettings)}>
-        {banners.map((item, i) => (
-          <div key={i} className={styles.banner_item}>
-            <Image
-              src={item.imageUrl}
-              alt={`banner-${i}`}
-              width={800}
-              height={600}
-              className={styles.banner_image}
-              priority
-            />
-          </div>
-        ))}
+        {loading || banners.length === 0
+          ? skeletonSlides
+          : banners.map((item, i) => (
+              <div key={i} className={styles.banner_item}>
+                <Image
+                  src={item.imageUrl}
+                  alt={`banner-${i}`}
+                  width={800}
+                  height={600}
+                  className={styles.banner_image}
+                  priority
+                />
+              </div>
+            ))}
       </Slider>
     </main>
   );

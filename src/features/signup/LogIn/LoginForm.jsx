@@ -8,21 +8,20 @@ import OTPModal from "../OTPModal/OTPModal";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
-const LoginForm = ({ onContinue,setIsLoginModalVisible }) => {
+const LoginForm = ({ onContinue, setIsLoginModalVisible }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [error, setError] = useState("");
-  const router = useRouter()
+  const [loading, setLoading] = useState(false); // 🔹 loading state
+  const router = useRouter();
 
   const setupRecaptcha = () => {
     if (!window.recaptchaVerifier) {
       window.recaptchaVerifier = new RecaptchaVerifier(
         auth,
         "recaptcha-container",
-        {
-          size: "invisible",
-        }
+        { size: "invisible" }
       );
     }
   };
@@ -31,6 +30,7 @@ const LoginForm = ({ onContinue,setIsLoginModalVisible }) => {
   const handleSendOtp = async () => {
     if (!phoneNumber) return alert("Enter phone number");
 
+    setLoading(true); // 🔹 show loader
     setupRecaptcha();
     const appVerifier = window.recaptchaVerifier;
 
@@ -43,10 +43,11 @@ const LoginForm = ({ onContinue,setIsLoginModalVisible }) => {
       window.confirmationResult = confirmationResult;
       setOtpSent(true);
       setError("");
-      console.log("OTP sent successfully!");
     } catch (err) {
       console.error("Error sending OTP:", err);
       setError(err.message);
+    } finally {
+      setLoading(false); // 🔹 hide loader after sending OTP
     }
   };
 
@@ -54,40 +55,40 @@ const LoginForm = ({ onContinue,setIsLoginModalVisible }) => {
   const handleVerifyOtp = async (otpValue) => {
     if (!otpValue) return alert("Enter OTP");
 
+    setLoading(true); // 🔹 show loader during verification
     try {
-      // Confirm OTP with Firebase
       const result = await window.confirmationResult.confirm(otpValue);
       const user = result.user;
 
-      console.log("User signed in:", user);
-      console.log(user,"djdjdyytt")
-      // Get ID token and refresh token
       const idToken = await user.getIdToken();
-      console.log(idToken,"kdkdjdjdhyttr")
       const refreshToken = user.refreshToken;
 
-      // Store tokens in cookies
       Cookies.set("idToken", idToken);
       Cookies.set("refreshToken", refreshToken);
-
-      // Optional: store user info
       Cookies.set("phoneNumber", user.phoneNumber);
 
-      // Continue to next step in your app
       onContinue?.();
     } catch (err) {
       console.error("OTP verification failed:", err);
       setError("Invalid OTP. Please try again.");
+    } finally {
+      setLoading(false); // 🔹 hide loader
     }
   };
 
   const handleNavigate = (slug) => {
     router.push(`/info/${slug}`);
-    setIsLoginModalVisible(false) // dynamic route example -> /info/about-us
+    setIsLoginModalVisible(false);
   };
 
   return (
     <div className={styles.loginForm}>
+      {loading && (
+        <div className={styles.loaderOverlay}>
+          <div className={styles.loader}></div>
+        </div>
+      )}
+
       {!otpSent ? (
         <>
           <h2 className={styles.title}>
@@ -109,28 +110,27 @@ const LoginForm = ({ onContinue,setIsLoginModalVisible }) => {
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
           />
-          
+
           <div id="recaptcha-container"></div>
-          
+
           <button className={styles.continueBtn} onClick={handleSendOtp}>
             Continue
           </button>
 
           <p className={styles.terms}>
             By signing in you agree to our{" "}
-            <span  onClick={() => handleNavigate("terms-and-conditions")}>Terms of Service</span> and{" "}
-            <span  onClick={() => handleNavigate("privacy-policy")}>Privacy Policy</span>
+            <span onClick={() => handleNavigate("terms-and-conditions")}>Terms of Service</span> and{" "}
+            <span onClick={() => handleNavigate("privacy-policy")}>Privacy Policy</span>
           </p>
         </>
       ) : (
-        <>
-          <OTPModal
-            phoneNumber={phoneNumber}
-            otp={otp} 
-            setOtp={setOtp}
-            handleVerifyOtp={handleVerifyOtp}
-          />
-        </>
+        <OTPModal
+          phoneNumber={phoneNumber}
+          otp={otp}
+          setOtp={setOtp}
+          handleVerifyOtp={handleVerifyOtp}
+          loading={loading} // 🔹 pass loader state
+        />
       )}
 
       {error && <p className={styles.error}>{error}</p>}

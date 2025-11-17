@@ -44,14 +44,16 @@ const ProductCard = ({ item, getwishList }) => {
           { productId: item.id },
           {
             headers: {
-              "x-api-key": "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+              "x-api-key":
+                "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
             },
           }
         );
       } else {
         const res = await api.delete(`${apiUrl}/v2/wishlist/${item.id}`, {
           headers: {
-            "x-api-key": "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+            "x-api-key":
+              "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
           },
         });
         if (res?.status === 200) {
@@ -79,19 +81,21 @@ const ProductCard = ({ item, getwishList }) => {
           height={300}
           className={styles.productImg}
         />
-        <span
-          className={`${styles.favorite} ${liked ? styles.liked : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleWishlist();
-          }}
-        >
-          <Heart
-            size={22}
-            fill={liked ? "red" : "none"}
-            stroke={liked ? "red" : "currentColor"}
-          />
-        </span>
+        {pathname === "/wishlist" && (
+          <span
+            className={`${styles.favorite} ${liked ? styles.liked : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWishlist();
+            }}
+          >
+            <Heart
+              size={22}
+              fill={liked ? "red" : "none"}
+              stroke={liked ? "red" : "currentColor"}
+            />
+          </span>
+        )}
       </div>
 
       <h3>{item?.name}</h3>

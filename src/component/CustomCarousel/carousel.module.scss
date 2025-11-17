@@ -1,7 +1,7 @@
 .carousel_main_wrap {
   width: 100%;
-  overflow: visible; // 🔹 allow dots to be visible
-  position: relative; // 🔹 make dots position relative
+  overflow: visible; // allow dots to be visible
+  position: relative;
 }
 
 .banner_item {
@@ -30,7 +30,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  z-index: 10; // 🔹 ensure dots are on top
+  z-index: 10;
 }
 
 :global(.slick-dots li button:before) {
@@ -56,10 +56,41 @@
   }
 
   :global(.slick-dots li button:before) {
-    color: #ff7b00; // make all dots orange on mobile
+    color: #ff7b00; // all dots orange
   }
 
   :global(.slick-dots li.slick-active button:before) {
     color: #ff7b00;
   }
+}
+
+/* 🔹 Skeleton shimmer */
+.skeletonSlide {
+  height: 30rem;
+  border-radius: 8px;
+  background: #ffe0b2; // light orange
+  position: relative;
+  overflow: hidden;
+  margin: 0 10px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -150px;
+    width: 150px;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 123, 0, 0.2),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
 }
