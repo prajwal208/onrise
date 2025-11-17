@@ -20,6 +20,7 @@
     "react-dom": "19.2.0",
     "react-google-recaptcha-v3": "^1.11.0",
     "react-slick": "^0.31.0",
+    "react-toastify": "^11.0.5",
     "sass": "^1.93.2",
     "slick-carousel": "^1.8.1"
   },

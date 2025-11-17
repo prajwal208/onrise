@@ -2,13 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import axios from "axios";
 import { nanoid } from "nanoid";
 import { Plus, Minus, Heart } from "lucide-react";
+import Image from "next/image";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import styles from "./ProductDetails.module.scss";
 import CanvasEditor from "@/component/CanvasEditor/CanvasEditor";
 import api from "@/axiosInstance/axiosInstance";
-import Image from "next/image";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -25,11 +27,14 @@ const ProductDetails = () => {
     fontSize: "",
   });
 
+  console.log(product,"jjshshsbvvvc")
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
+        setLoading(true);
         const res = await api.get(`/v2/product/${id}`, {
           headers: {
             "x-api-key":
@@ -39,6 +44,9 @@ const ProductDetails = () => {
         setProduct(res?.data?.data);
       } catch (error) {
         console.error("Error fetching product:", error);
+        toast.error("Failed to fetch product.");
+      } finally {
+        setLoading(false);
       }
     };
     if (id) fetchProduct();
@@ -46,7 +54,7 @@ const ProductDetails = () => {
 
   const addToCart = async () => {
     if (product?.configuration?.length > 0 && !selectedSize) {
-      alert("Please select a size.");
+      toast.warning("Please select a size.");
       return;
     }
 
@@ -89,15 +97,16 @@ const ProductDetails = () => {
 
     try {
       setLoading(true);
-      await api.post(`${apiUrl}/v1/cart`, payload, {
+      const res = await api.post(`${apiUrl}/v1/cart`, payload, {
         headers: {
           "x-api-key":
             "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
         },
       });
-      alert("Added to cart!");
+      if (res.status === 200) toast.success("Added to bag!");
     } catch (err) {
       console.error("❌ Error adding to cart:", err);
+      toast.error(err?.response?.data?.message || "Failed to add to bag");
     } finally {
       setLoading(false);
     }
@@ -105,7 +114,7 @@ const ProductDetails = () => {
 
   const addToWishlist = async () => {
     try {
-      await api.post(
+      const res = await api.post(
         `${apiUrl}/v2/wishlist`,
         { productId: product.id },
         {
@@ -115,17 +124,27 @@ const ProductDetails = () => {
           },
         }
       );
-    } catch (error) {}
+      if (res.status === 200) toast.success("Added to wishlist!");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to add to wishlist");
+    }
   };
-
-  if (!product) return <div className={styles.loading}>Loading...</div>;
 
   const handleDesignChange = (designDataURL) => {
     setDesignPng(designDataURL);
   };
 
+  if (loading && !product) {
+    return (
+      <div className={styles.shimmerWrapper}>
+        <div className={styles.shimmer}></div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
+      <ToastContainer position="top-right" autoClose={2000} />
       {product?.isCustomizable ? (
         <CanvasEditor
           product={product}
@@ -134,7 +153,7 @@ const ProductDetails = () => {
         />
       ) : (
         <Image
-          src={product.canvasImage}
+          src={product?.canvasImage}
           alt="product"
           width={500}
           height={600}
@@ -142,29 +161,28 @@ const ProductDetails = () => {
         />
       )}
 
-      {/* Info Section */}
       <div className={styles.infoSection}>
-        <h1>{product.name}</h1>
-        <p className={styles.subtitle}>{product.subtitle}</p>
+        <h1>{product?.name}</h1>
+        <p className={styles.subtitle}>{product?.subtitle}</p>
 
         <div className={styles.priceSection}>
-          {product.discountedPrice ? (
+          {product?.discountedPrice ? (
             <>
               <p className={styles.discountedPrice}>
-                ₹ {product.discountedPrice}
+                ₹ {product?.discountedPrice}
               </p>
-              <p className={styles.basePrice}>₹ {product.basePrice}</p>
+              <p className={styles.basePrice}>₹ {product?.basePrice}</p>
             </>
           ) : (
-            <p className={styles.price}>₹ {product.basePrice}</p>
+            <p className={styles.price}>₹ {product?.basePrice}</p>
           )}
         </div>
 
-        {product.configuration?.[0]?.options?.length > 0 && (
+        {product?.configuration?.[0]?.options?.length > 0 && (
           <div className={styles.sizes}>
             <h4>Sizes</h4>
             <div className={styles.sizeOptions}>
-              {product.configuration[0].options.map((s) => (
+              {product?.configuration[0].options.map((s) => (
                 <button
                   key={s.value}
                   className={`${styles.sizeBtn} ${
@@ -179,7 +197,6 @@ const ProductDetails = () => {
           </div>
         )}
 
-        {/* Buttons */}
         <div className={styles.buttonsWrapper}>
           <button
             className={styles.addToCart}
@@ -188,18 +205,16 @@ const ProductDetails = () => {
           >
             {loading ? "ADDING..." : "ADD TO BAG"}
           </button>
-
           <button className={styles.addToWishlist} onClick={addToWishlist}>
             <Heart size={18} style={{ marginRight: "6px" }} />
             WISHLIST
           </button>
         </div>
 
-        {/* Accordion Section */}
         <div className={styles.accordion}>
           {[
-            { title: "DETAILS", content: product.description },
-            { title: "CARE", content: product.care },
+            { title: "DETAILS", content: product?.description },
+            { title: "CARE", content: product?.care },
           ].map((sec) => (
             <div key={sec.title} className={styles.accordionItem}>
               <div
