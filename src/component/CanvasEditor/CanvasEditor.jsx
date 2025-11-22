@@ -8,7 +8,7 @@ const FONTS = ["Arial", "Asteroid", "BEACHBIKINI", "Beachside", "Blueberry Muffi
 const COLORS = ["#FFFFFF","#000000","#FF3B30","#FF2D55","#5856D6","#007AFF","#34C759","#AF52DE","#FF9500","#FFCC00"];
 const SIZES = [10,12,14,16,18,20,22,24,26,28,30,32];
 
-export default function CanvasEditor({ product }) {
+export default function CanvasEditor({ product,setPrintingImg }) {
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
   const activeTextRef = useRef(null);
@@ -71,51 +71,42 @@ export default function CanvasEditor({ product }) {
       return;
     }
 
-    window.fabric.Image.fromURL(
-      shirtUrl,
-      (shirtImg) => {
-        if (!shirtImg.width) return;
-
-        const scale = canvas.width / shirtImg.width;
-        shirtImg.set({ scaleX: scale, scaleY: scale, top: 0, left: 0 });
-        canvas.setBackgroundImage(shirtImg, () => {
-          canvas.renderAll();
-          if (illustrationUrl) {
-            window.fabric.Image.fromURL(
-              illustrationUrl,
-              (illuImg) => {
-                if (!illuImg.width) return;
-                const scaleX = SAFE.width / illuImg.width * 1.2;
-                const scaleY = SAFE.height / illuImg.height * 1.2;
-                const scale = Math.min(scaleX, scaleY);
-                illuImg.set({
-                  left: SAFE.left + (SAFE.width - illuImg.width * scale) / 2 + 30,
-                  top: SAFE.top + (SAFE.height - illuImg.height * scale) / 2 + 40,
-                  scaleX: scale,
-                  scaleY: scale,
-                  selectable: false,
-                  evented: false,
-                });
-                canvas.add(illuImg);
-                addTextBelowIllustration(canvas, illuImg);
-              },
-              { crossOrigin: "anonymous" }
-            );
-          } else {
-            addTextBelowIllustration(canvas, null);
-          }
-        });
-      },
-      { crossOrigin: "anonymous" }
-    );
+    window.fabric.Image.fromURL(shirtUrl, (shirtImg) => {
+      if (!shirtImg.width) return;
+      const scale = canvas.width / shirtImg.width;
+      shirtImg.set({ scaleX: scale, scaleY: scale, top: 0, left: 0 });
+      canvas.setBackgroundImage(shirtImg, () => {
+        canvas.renderAll();
+        if (illustrationUrl) {
+          window.fabric.Image.fromURL(illustrationUrl, (illuImg) => {
+            if (!illuImg.width) return;
+            const scaleX = SAFE.width / illuImg.width * 1.2;
+            const scaleY = SAFE.height / illuImg.height * 1.2;
+            const scale = Math.min(scaleX, scaleY);
+            illuImg.set({
+              left: SAFE.left + (SAFE.width - illuImg.width * scale) / 2 + 30,
+              top: SAFE.top + (SAFE.height - illuImg.height * scale) / 2 + 40,
+              scaleX: scale,
+              scaleY: scale,
+              selectable: false,
+              evented: false,
+            });
+            canvas.add(illuImg);
+            addTextBelowIllustration(canvas, illuImg);
+          }, { crossOrigin: "anonymous" });
+        } else {
+          addTextBelowIllustration(canvas, null);
+        }
+      });
+    }, { crossOrigin: "anonymous" });
   };
 
   const addTextBelowIllustration = (canvas, illustration) => {
     const topPos = illustration
-      ? illustration.top + illustration.getScaledHeight() + 10 // 10px below illustration
+      ? illustration.top + illustration.getScaledHeight() + 10
       : SAFE.top + SAFE.height / 2 - selectedSize / 2;
 
-    const text = new window.fabric.Textbox("YOUR TEXT HERE", {
+    const text = new window.fabric.Textbox(product?.presetText? product?.presetText : "YOUR TEXT HERE", {
       left: SAFE.left + 30,
       top: topPos,
       width: SAFE.width,
@@ -133,6 +124,14 @@ export default function CanvasEditor({ product }) {
       selectable: true,
     });
 
+    // Set initial printingImg values
+    setPrintingImg({
+      textColor: text.fill,
+      fontFamily: text.fontFamily,
+      printText: text.text,
+      fontSize: text.fontSize,
+    });
+
     text.on("selected", () => {
       activeTextRef.current = text;
       setIsEditing(true);
@@ -141,10 +140,23 @@ export default function CanvasEditor({ product }) {
       setSelectedSize(text.fontSize || 28);
     });
 
-    text.on("deselected", () => {
-      setTimeout(() => {
-        if (!canvas.getActiveObject()) setIsEditing(false);
-      }, 100);
+    // Update printingImg whenever text changes
+    text.on("modified", () => {
+      setPrintingImg({
+        textColor: text.fill,
+        fontFamily: text.fontFamily,
+        printText: text.text,
+        fontSize: text.fontSize,
+      });
+    });
+
+    text.on("changed", () => {
+      setPrintingImg({
+        textColor: text.fill,
+        fontFamily: text.fontFamily,
+        printText: text.text,
+        fontSize: text.fontSize,
+      });
     });
 
     canvas.add(text);
@@ -159,6 +171,14 @@ export default function CanvasEditor({ product }) {
       fontSize: selectedSize,
     });
     fabricCanvasRef.current?.renderAll();
+
+    // Update printingImg whenever toolbar changes
+    setPrintingImg({
+      textColor: selectedColor,
+      fontFamily: selectedFont,
+      printText: activeTextRef.current.text,
+      fontSize: selectedSize,
+    });
   };
 
   useEffect(() => { applyChanges(); }, [selectedFont, selectedColor, selectedSize]);
