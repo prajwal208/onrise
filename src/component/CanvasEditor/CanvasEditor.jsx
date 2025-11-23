@@ -1,106 +1,103 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import styles from "./canvas.module.scss";
-import { Pointer } from "lucide-react";
 
 const SAFE = { left: 140, top: 260, width: 260, height: 180 };
 
 const FONTS = [
-  'Meanwhile',
-  'MONKEY',
-  'MORELOVE',
-  'PINK ROSE',
-  'RAINBOWDREAMS',
-  'REALITY',
-  'SCRIBBLE',
-  'SOMEKIND',
-  'SQUISHY',
-  'Summershine',
-  'Sunshine',
-  'SweetDreams',
-  'TheWildOne',
-  'TheWildOneFun',
-  'TheWildOneSolid',
-  'Asteroid',
-  'BeachBikini',
-  'Beachside',
-  'BeachSunrise',
-  'BlueberryMuffin',
-  'Cakepop',
-  'California',
-  'DearMay',
-  'Firefly',
-  'Forever',
-  'FreshLemonade',
-  'Frozen',
-  'Hathway',
-  'HeySugar',
-  'Honey',
-  'Honeycomb',
-  'However',
-  'IceCream',
-  'Jade Skies',
-  'Joyful',
-  'Love Hearts',
-  'Love More',
-  'Love Vibes',
-  'LoveAndHoney',
-  'MapleSugar',
-  'Thinker',
-  'Thoughtful',
-  'TigerLand',
-  'Tigerlily',
-]
+  "Meanwhile",
+  "MONKEY",
+  "MORELOVE",
+  "PINK ROSE",
+  "RAINBOWDREAMS",
+  "REALITY",
+  "SCRIBBLE",
+  "SOMEKIND",
+  "SQUISHY",
+  "Summershine",
+  "Sunshine",
+  "SweetDreams",
+  "TheWildOne",
+  "TheWildOneFun",
+  "TheWildOneSolid",
+  "Asteroid",
+  "BeachBikini",
+  "Beachside",
+  "BeachSunrise",
+  "BlueberryMuffin",
+  "Cakepop",
+  "California",
+  "DearMay",
+  "Firefly",
+  "Forever",
+  "FreshLemonade",
+  "Frozen",
+  "Hathway",
+  "HeySugar",
+  "Honey",
+  "Honeycomb",
+  "However",
+  "IceCream",
+  "Jade Skies",
+  "Joyful",
+  "Love Hearts",
+  "Love More",
+  "Love Vibes",
+  "LoveAndHoney",
+  "MapleSugar",
+  "Thinker",
+  "Thoughtful",
+  "TigerLand",
+  "Tigerlily",
+];
 
-
-const fontMap = {                 
-  Meanwhile: 'Meanwhile',
-  MONKEY: 'Monkey',
-  MORELOVE: 'MoreLove',
-  'PINK ROSE': 'Pink Rose',
-  RAINBOWDREAMS: 'RainbowDreams',
-  REALITY: 'Reality',
-  SCRIBBLE: 'Scramble',              // Scramble.ttf
-  SOMEKIND: 'Somekind',
-  SQUISHY: 'SourSlushy',             // SourSlushy.ttf
-  Summershine: 'SummerSunshine',     // SummerSunshine.ttf
-  Sunshine: 'Sunlight',              // Sunlight.ttf
-  SweetDreams: 'SweetDreams',
-  TheWildOne: 'TheWildOne',
-  TheWildOneFun: 'TheWildOneFun',
-  TheWildOneSolid: 'TheWildOneSolid',
-
-  // ——— ALL NEW FONTS (direct 1:1 match) ———
-  Asteroid: 'Asteroid',
-  BeachBikini: 'BeachBikini',
-  Beachside: 'Beachside',
-  BeachSunrise: 'BeachSunrise',
-  BlueberryMuffin: 'BlueberryMuffin',
-  Cakepop: 'Cakepop',
-  California: 'California',
-  DearMay: 'DearMay',
-  Firefly: 'Firefly',
-  Forever: 'Forever',
-  FreshLemonade: 'FreshLemonade',
-  Frozen: 'Frozen',
-  Hathway: 'Hathway',
-  HeySugar: 'HeySugar',
-  Honey: 'Honey',
-  Honeycomb: 'Honeycomb',
-  However: 'However',
-  IceCream: 'IceCream',
-  'Jade Skies': 'Jade Skies',
-  Joyful: 'Joyful',
-  'Love Hearts': 'Love Hearts',
-  'Love More': 'Love More',
-  'Love Vibes': 'Love Vibes',
-  LoveAndHoney: 'LoveAndHoney',
-  MapleSugar: 'MapleSugar',
-  Thinker: 'Thinker',
-  Thoughtful: 'Thoughtful',
-  TigerLand: 'TigerLand',
-  Tigerlily: 'Tigerlily',
+const fontMap = {
+  Meanwhile: "Meanwhile",
+  MONKEY: "Monkey",
+  MORELOVE: "MoreLove",
+  "PINK ROSE": "Pink Rose",
+  RAINBOWDREAMS: "RainbowDreams",
+  REALITY: "Reality",
+  SCRIBBLE: "Scramble",
+  SOMEKIND: "Somekind",
+  SQUISHY: "SourSlushy",
+  Summershine: "SummerSunshine",
+  Sunshine: "Sunlight",
+  SweetDreams: "SweetDreams",
+  TheWildOne: "TheWildOne",
+  TheWildOneFun: "TheWildOneFun",
+  TheWildOneSolid: "TheWildOneSolid",
+  Asteroid: "Asteroid",
+  BeachBikini: "BeachBikini",
+  Beachside: "Beachside",
+  BeachSunrise: "BeachSunrise",
+  BlueberryMuffin: "BlueberryMuffin",
+  Cakepop: "Cakepop",
+  California: "California",
+  DearMay: "DearMay",
+  Firefly: "Firefly",
+  Forever: "Forever",
+  FreshLemonade: "FreshLemonade",
+  Frozen: "Frozen",
+  Hathway: "Hathway",
+  HeySugar: "HeySugar",
+  Honey: "Honey",
+  Honeycomb: "Honeycomb",
+  However: "However",
+  IceCream: "IceCream",
+  "Jade Skies": "Jade Skies",
+  Joyful: "Joyful",
+  "Love Hearts": "Love Hearts",
+  "Love More": "Love More",
+  "Love Vibes": "Love Vibes",
+  LoveAndHoney: "LoveAndHoney",
+  MapleSugar: "MapleSugar",
+  Thinker: "Thinker",
+  Thoughtful: "Thoughtful",
+  TigerLand: "TigerLand",
+  Tigerlily: "Tigerlily",
 };
+
 const COLORS = [
   "#FFFFFF",
   "#000000",
@@ -136,14 +133,15 @@ const COLORS = [
   "#ffff00",
   "#ffd740",
   "#ffab40",
-  "#ff6e40"
+  "#ff6e40",
 ];
-const SIZES = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32,34,38];
+const SIZES = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 38];
 
 export default function CanvasEditor({ product, setPrintingImg }) {
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
   const activeTextRef = useRef(null);
+  const scriptRef = useRef(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Arial");
@@ -167,31 +165,70 @@ export default function CanvasEditor({ product, setPrintingImg }) {
   useEffect(() => {
     if (window.fabric) {
       initCanvas();
-      return;
+      return () => disposeCanvas();
     }
-    const script = document.createElement("script");
-    script.src =
+    const s = document.createElement("script");
+    s.src =
       "https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js";
-    script.async = true;
-    script.onload = () => initCanvas();
-    document.body.appendChild(script);
+    s.async = true;
+    s.onload = () => initCanvas();
+    document.body.appendChild(s);
+    scriptRef.current = s;
 
     return () => {
-      fabricCanvasRef.current?.dispose();
-      fabricCanvasRef.current = null;
+      disposeCanvas();
+      if (scriptRef.current) document.body.removeChild(scriptRef.current);
     };
   }, [product]);
 
+  const disposeCanvas = () => {
+    try {
+      fabricCanvasRef.current?.dispose();
+    } catch (e) {}
+    fabricCanvasRef.current = null;
+    activeTextRef.current = null;
+  };
+
   const initCanvas = () => {
+    disposeCanvas();
     const canvas = new window.fabric.Canvas(canvasRef.current, {
       width: 600,
       height: 700,
       backgroundColor: "#f0f0f0",
       preserveObjectStacking: true,
-      selection: false,
+      selection: true,
     });
 
     fabricCanvasRef.current = canvas;
+
+    const handleSelection = (e) => {
+      const obj = (e.selected && e.selected[0]) || e.target;
+      if (obj && obj.type === "textbox") {
+        activeTextRef.current = obj;
+        setIsEditing(!!obj.isEditing);
+        setSelectedFont(obj.fontFamily || "Arial");
+        setSelectedColor(obj.fill || "#000");
+        setSelectedSize(obj.fontSize || 28);
+      }
+    };
+
+    const clearSelection = () => {
+      activeTextRef.current = null;
+      setIsEditing(false);
+    };
+
+    canvas.on("selection:created", handleSelection);
+    canvas.on("selection:updated", handleSelection);
+    canvas.on("selection:cleared", clearSelection);
+
+    canvas.on("mouse:down", (opt) => {
+      const t = opt.target;
+      if (t && t.type === "textbox") {
+        canvas.setActiveObject(t);
+        handleSelection({ selected: [t] });
+      }
+    });
+
     loadProductImages(canvas);
   };
 
@@ -199,10 +236,7 @@ export default function CanvasEditor({ product, setPrintingImg }) {
     const shirtUrl = getRealImageUrl(product?.canvasImage);
     const illustrationUrl = getRealImageUrl(product?.illustrationImage);
 
-    if (!shirtUrl) {
-      console.error("No shirt image provided");
-      return;
-    }
+    if (!shirtUrl) return;
 
     window.fabric.Image.fromURL(
       shirtUrl,
@@ -250,7 +284,7 @@ export default function CanvasEditor({ product, setPrintingImg }) {
       : SAFE.top + SAFE.height / 2 - selectedSize / 2;
 
     const text = new window.fabric.Textbox(
-      product?.presetText ? product?.presetText : "YOUR TEXT HERE",
+      product?.presetText || "YOUR TEXT HERE",
       {
         left: SAFE.left + 30,
         top: topPos,
@@ -270,7 +304,6 @@ export default function CanvasEditor({ product, setPrintingImg }) {
       }
     );
 
-    // Set initial printingImg values
     setPrintingImg({
       textColor: text.fill,
       fontFamily: text.fontFamily,
@@ -280,56 +313,84 @@ export default function CanvasEditor({ product, setPrintingImg }) {
 
     text.on("selected", () => {
       activeTextRef.current = text;
-      setIsEditing(true);
       setSelectedFont(text.fontFamily || "Arial");
       setSelectedColor(text.fill || "#000");
       setSelectedSize(text.fontSize || 28);
+      setIsEditing(!!text.isEditing);
     });
 
-    // Update printingImg whenever text changes
-    text.on("modified", () => {
+    text.on("editing:entered", () => {
+      try {
+        const ta = text.hiddenTextarea;
+        if (ta) {
+          ta.style.fontFamily = text.fontFamily || "Arial";
+          ta.style.color = text.fill || "#000";
+          ta.style.fontSize = (text.fontSize || 28) + "px";
+        }
+      } catch (e) {}
+      activeTextRef.current = text;
+      setIsEditing(true);
+    });
+
+    text.on("editing:exited", () => setIsEditing(false));
+
+    const syncPrinting = () =>
       setPrintingImg({
         textColor: text.fill,
         fontFamily: text.fontFamily,
         printText: text.text,
         fontSize: text.fontSize,
       });
-    });
 
-    text.on("changed", () => {
-      setPrintingImg({
-        textColor: text.fill,
-        fontFamily: text.fontFamily,
-        printText: text.text,
-        fontSize: text.fontSize,
-      });
-    });
+    text.on("modified", syncPrinting);
+    text.on("changed", syncPrinting);
 
     canvas.add(text);
-    canvas.renderAll();
+    canvas.requestRenderAll();
   };
 
-  const applyChanges = () => {
-    if (!activeTextRef.current) return;
-    activeTextRef.current.set({
-      fontFamily: selectedFont,
-      fill: selectedColor,
-      fontSize: selectedSize,
-    });
-    fabricCanvasRef.current?.renderAll();
+  const applyToActiveText = (props) => {
+    const canvas = fabricCanvasRef.current;
+    const obj =
+      activeTextRef.current ||
+      canvas?.getObjects().find((o) => o.type === "textbox");
+    if (!obj) return;
 
-    // Update printingImg whenever toolbar changes
+    obj.set(props);
+    canvas?.requestRenderAll();
+
+    try {
+      const ta = obj.hiddenTextarea;
+      if (ta) {
+        if (props.fontFamily) ta.style.fontFamily = props.fontFamily;
+        if (props.fill) ta.style.color = props.fill;
+        if (props.fontSize) ta.style.fontSize = props.fontSize + "px";
+      }
+    } catch (e) {}
+
     setPrintingImg({
-      textColor: selectedColor,
-      fontFamily: selectedFont,
-      printText: activeTextRef.current.text,
-      fontSize: selectedSize,
+      textColor: obj.fill,
+      fontFamily: obj.fontFamily,
+      printText: obj.text,
+      fontSize: obj.fontSize,
     });
   };
 
-  useEffect(() => {
-    applyChanges();
-  }, [selectedFont, selectedColor, selectedSize]);
+  const onFontSelect = (fontName) => {
+    const mapped = fontMap[fontName] || fontName;
+    setSelectedFont(mapped);
+    applyToActiveText({ fontFamily: mapped });
+  };
+
+  const onColorSelect = (c) => {
+    setSelectedColor(c);
+    applyToActiveText({ fill: c });
+  };
+
+  const onSizeSelect = (s) => {
+    setSelectedSize(s);
+    applyToActiveText({ fontSize: s });
+  };
 
   return (
     <div className={styles.editorWrapper}>
@@ -360,7 +421,7 @@ export default function CanvasEditor({ product, setPrintingImg }) {
               <span
                 className={styles.colorPreview}
                 style={{ backgroundColor: selectedColor }}
-              ></span>
+              />
               Color
             </button>
             <button
@@ -383,27 +444,24 @@ export default function CanvasEditor({ product, setPrintingImg }) {
             {activeTab === "font" && (
               <div className={styles.fontList}>
                 {FONTS.map((fontName) => {
-                  const googleFontName =
-                    fontMap[fontName] || fontName.replace(/\s+/g, "+");
-                  const displayName =  fontName;
-
+                  const mapped = fontMap[fontName] || fontName;
                   return (
                     <div key={fontName} className="font-item">
                       <p
+                        onClick={() => onFontSelect(fontName)}
                         style={{
-                          fontFamily: `'${
-                            fontMap[fontName] || fontName
-                          }', cursive`,
-                          fontSize:  "0.875rem",
-                          cursor:"pointer"
+                          fontFamily: `'${mapped}', cursive`,
+                          fontSize: "0.875rem",
+                          cursor: "pointer",
+                          opacity: selectedFont === mapped ? 1 : 0.9,
+                          fontWeight: selectedFont === mapped ? 600 : 400,
                         }}
                       >
-                        {displayName}
+                        {fontName}
                       </p>
-                     
                     </div>
                   );
-                })}{" "}
+                })}
               </div>
             )}
 
@@ -413,12 +471,11 @@ export default function CanvasEditor({ product, setPrintingImg }) {
                   <div
                     key={c}
                     style={{ backgroundColor: c }}
-                    onClick={() => setSelectedColor(c)}
+                    onClick={() => onColorSelect(c)}
                     className={`${styles.colorButton} ${
                       selectedColor === c ? styles.active : ""
                     }`}
-                  >
-                  </div>
+                  />
                 ))}
               </div>
             )}
@@ -428,7 +485,7 @@ export default function CanvasEditor({ product, setPrintingImg }) {
                 {SIZES.map((s) => (
                   <button
                     key={s}
-                    onClick={() => setSelectedSize(s)}
+                    onClick={() => onSizeSelect(s)}
                     className={`${styles.sizeButton} ${
                       selectedSize === s ? styles.active : ""
                     }`}
@@ -450,10 +507,9 @@ export default function CanvasEditor({ product, setPrintingImg }) {
             if (text) {
               canvas.setActiveObject(text);
               text.enterEditing();
-              text.hiddenTextarea?.focus();
               canvas.requestRenderAll();
-              setIsEditing(true);
               activeTextRef.current = text;
+              setIsEditing(true);
             }
           }}
           className={styles.editButton}

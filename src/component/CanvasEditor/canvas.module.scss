@@ -1,57 +1,56 @@
 // CanvasEditor.module.scss
-@import url('https://fonts.cdnfonts.com/css/the-wild-one');
-@import url('https://fonts.cdnfonts.com/css/sweet-dreams');
-@import url('https://fonts.cdnfonts.com/css/summershine');
-@import url('https://fonts.cdnfonts.com/css/pink-rose');
-@import url('https://fonts.cdnfonts.com/css/rainbow-dreams');
+@import url("https://fonts.cdnfonts.com/css/the-wild-one");
+@import url("https://fonts.cdnfonts.com/css/sweet-dreams");
+@import url("https://fonts.cdnfonts.com/css/summershine");
+@import url("https://fonts.cdnfonts.com/css/pink-rose");
+@import url("https://fonts.cdnfonts.com/css/rainbow-dreams");
 
 // Meanwhile (close match: CC Meanwhile - use for handwritten style)
-@import url('https://fonts.cdnfonts.com/css/cc-meanwhile');
+@import url("https://fonts.cdnfonts.com/css/cc-meanwhile");
 
 // Monkey (exact match)
-@import url('https://fonts.cdnfonts.com/css/monkey-2');
+@import url("https://fonts.cdnfonts.com/css/monkey-2");
 
 // MoreLove (exact match)
-@import url('https://fonts.cdnfonts.com/css/morelove');
+@import url("https://fonts.cdnfonts.com/css/morelove");
 
 // Reality (exact match)
-@import url('https://fonts.cdnfonts.com/css/reality');
+@import url("https://fonts.cdnfonts.com/css/reality");
 
 // Scramble (close match: Scramble Storm)
-@import url('https://fonts.cdnfonts.com/css/scramble-storm');
+@import url("https://fonts.cdnfonts.com/css/scramble-storm");
 
 // Somekind (no exact; use Indie Flower from Google as fallback)
-@import url('https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap");
 
 // SourSlushy (no match; use local TTF)
 
 // Sunlight (exact match)
-@import url('https://fonts.cdnfonts.com/css/sunlight');
+@import url("https://fonts.cdnfonts.com/css/sunlight");
 
 // All other fonts from your list with CDN matches:
-@import url('https://fonts.cdnfonts.com/css/asteroid-type'); // Asteroid (close)
-@import url('https://fonts.cdnfonts.com/css/beachside'); // Beachside (exact, from search)
-@import url('https://fonts.cdnfonts.com/css/cakepop'); // Cakepop (exact)
-@import url('https://fonts.cdnfonts.com/css/california'); // California (exact)
-@import url('https://fonts.cdnfonts.com/css/firefly'); // Firefly (exact)
-@import url('https://fonts.cdnfonts.com/css/forever'); // Forever (exact)
-@import url('https://fonts.cdnfonts.com/css/freshlemonade'); // FreshLemonade (exact)
-@import url('https://fonts.cdnfonts.com/css/frozen'); // Frozen (exact)
-@import url('https://fonts.cdnfonts.com/css/heysugar'); // HeySugar (exact)
-@import url('https://fonts.cdnfonts.com/css/honey'); // Honey (exact)
-@import url('https://fonts.cdnfonts.com/css/honeycomb'); // Honeycomb (exact)
-@import url('https://fonts.cdnfonts.com/css/honeycomb-script-personal-use'); // However (no exact; skip or local)
-@import url('https://fonts.cdnfonts.com/css/ice-cream-cake'); // IceCream (close: Ice Cream Cake)
-@import url('https://fonts.cdnfonts.com/css/jade-skies'); // Jade Skies (exact)
-@import url('https://fonts.cdnfonts.com/css/joyful'); // Joyful (exact)
-@import url('https://fonts.cdnfonts.com/css/sexy-love-hearts'); // Love Hearts (close: Sexy Love Hearts)
-@import url('https://fonts.cdnfonts.com/css/love-vibes'); // Love Vibes (exact)
-@import url('https://fonts.cdnfonts.com/css/love-and-honey'); // LoveAndHoney (exact)
-@import url('https://fonts.cdnfonts.com/css/thinker'); // Thinker (exact)
-@import url('https://fonts.cdnfonts.com/css/thinker-historic'); // Thoughtful (close: Thinker Historic)
-@import url('https://fonts.cdnfonts.com/css/tigerland'); // TigerLand (exact)
-@import url('https://fonts.cdnfonts.com/css/tigerlily'); // Tigerlily (exact)
-
+@import url("https://fonts.cdnfonts.com/css/asteroid-type"); // Asteroid (close)
+@import url("https://fonts.cdnfonts.com/css/beachside"); // Beachside (exact, from search)
+@import url("https://fonts.cdnfonts.com/css/cakepop"); // Cakepop (exact)
+@import url("https://fonts.cdnfonts.com/css/california"); // California (exact)
+@import url("https://fonts.cdnfonts.com/css/firefly"); // Firefly (exact)
+@import url("https://fonts.cdnfonts.com/css/forever"); // Forever (exact)
+@import url("https://fonts.cdnfonts.com/css/freshlemonade"); // FreshLemonade (exact)
+@import url("https://fonts.cdnfonts.com/css/frozen"); // Frozen (exact)
+@import url("https://fonts.cdnfonts.com/css/heysugar"); // HeySugar (exact)
+@import url("https://fonts.cdnfonts.com/css/honey"); // Honey (exact)
+@import url("https://fonts.cdnfonts.com/css/honeycomb"); // Honeycomb (exact)
+@import url("https://fonts.cdnfonts.com/css/honeycomb-script-personal-use"); // However (no exact; skip or local)
+@import url("https://fonts.cdnfonts.com/css/ice-cream-cake"); // IceCream (close: Ice Cream Cake)
+@import url("https://fonts.cdnfonts.com/css/jade-skies"); // Jade Skies (exact)
+@import url("https://fonts.cdnfonts.com/css/joyful"); // Joyful (exact)
+@import url("https://fonts.cdnfonts.com/css/sexy-love-hearts"); // Love Hearts (close: Sexy Love Hearts)
+@import url("https://fonts.cdnfonts.com/css/love-vibes"); // Love Vibes (exact)
+@import url("https://fonts.cdnfonts.com/css/love-and-honey"); // LoveAndHoney (exact)
+@import url("https://fonts.cdnfonts.com/css/thinker"); // Thinker (exact)
+@import url("https://fonts.cdnfonts.com/css/thinker-historic"); // Thoughtful (close: Thinker Historic)
+@import url("https://fonts.cdnfonts.com/css/tigerland"); // TigerLand (exact)
+@import url("https://fonts.cdnfonts.com/css/tigerlily"); // Tigerlily (exact)
 
 .editorWrapper {
   position: relative;
@@ -177,9 +176,8 @@
   white-space: nowrap;
 }
 
-.toolbarContent::-webkit-scrollbar{
+.toolbarContent::-webkit-scrollbar {
   display: none;
-
 }
 
 // Font buttons
@@ -226,7 +224,7 @@
 }
 
 .colorButton {
-  flex: 0 0 72px;           // Fixed square size
+  flex: 0 0 72px; // Fixed square size
   width: 70px;
   height: 55px;
   border-radius: 10px;
