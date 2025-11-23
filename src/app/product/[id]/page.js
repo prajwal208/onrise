@@ -13,13 +13,14 @@ import CanvasEditor from "@/component/CanvasEditor/CanvasEditor";
 import api from "@/axiosInstance/axiosInstance";
 import AddToBagLoader from "@/component/AddToBagLoader/AddToBagLoader";
 import DynamicModal from "@/component/Modal/Modal";
+import ProductDetailsShimmer from "@/component/ProductDetailsShimmer/ProductDetailsShimmer";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);  // initially true
   const [activeSection, setActiveSection] = useState(null);
   const [designPng, setDesignPng] = useState("");
   const [printingImg, setPrintingImg] = useState({
@@ -37,7 +38,6 @@ const ProductDetails = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        setLoading(true);
         const res = await api.get(`/v2/product/${id}`, {
           headers: {
             "x-api-key":
@@ -55,6 +55,11 @@ const ProductDetails = () => {
 
     if (id) fetchProduct();
   }, [id, apiUrl]);
+
+  // ---- Shimmer Loader ----
+if (loading && !product) {
+  return <ProductDetailsShimmer />;
+}
 
   // ---- Add to Cart ----
   const addToCart = async () => {
@@ -124,7 +129,7 @@ const ProductDetails = () => {
     }
   };
 
-  // ---- Add to Wishlist ----
+  // ---- Wishlist ----
   const addToWishlist = async () => {
     if (!accessToken) {
       toast.warning("Please login to Add to Wishlist");
@@ -150,17 +155,7 @@ const ProductDetails = () => {
     }
   };
 
-  const handleDesignChange = (designDataURL) => {
-    setDesignPng(designDataURL);
-  };
-
-  if (loading && !product) {
-    return (
-      <div className={styles.shimmerWrapper}>
-        <div className={styles.shimmer}></div>
-      </div>
-    );
-  }
+  const handleDesignChange = (designDataURL) => setDesignPng(designDataURL);
 
   return (
     <div className={styles.container}>
@@ -225,33 +220,6 @@ const ProductDetails = () => {
             <Heart size={18} style={{ marginRight: "6px" }} />
             WISHLIST
           </button>
-        </div>
-
-        <div className={styles.accordion}>
-          {[
-            { title: "DETAILS", content: product?.description },
-            { title: "CARE", content: product?.care },
-          ].map((sec) => (
-            <div key={sec.title} className={styles.accordionItem}>
-              <div
-                className={styles.accordionHeader}
-                onClick={() =>
-                  setActiveSection(activeSection === sec.title ? null : sec.title)
-                }
-              >
-                <h3>{sec.title}</h3>
-                {activeSection === sec.title ? <Minus /> : <Plus />}
-              </div>
-
-              <div
-                className={`${styles.accordionContent} ${
-                  activeSection === sec.title ? styles.active : ""
-                }`}
-              >
-                <p>{sec.content || "No information available."}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
 
