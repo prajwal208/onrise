@@ -160,6 +160,26 @@
     font-weight: 400;
   }
 
+  .mobileMenu{
+    background-color: #fff;
+    z-index: 999;
+    width: 60%;
+    margin-top: 0.3rem;
+    border-radius: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+   
+    li{
+      display: flex;
+      align-items: center;
+      justify-content: left;
+      gap: 0.5rem;
+      list-style: none;
+      padding: 0.5rem;
+    }
+  }
+
   /* Dots positioning for mobile */
   :global(.slick-dots) {
     bottom: 30px;
