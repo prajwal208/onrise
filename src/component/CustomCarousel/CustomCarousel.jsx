@@ -13,10 +13,10 @@ const CustomCarousel = () => {
   const [banners, setBanners] = useState([]);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(true); // shimmer loader
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true); // 👈 only on client
+    setMounted(true);
 
     const getImage = async () => {
       try {
@@ -43,7 +43,6 @@ const CustomCarousel = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Desktop / marquee slider
   const desktopSettings = {
     dots: false,
     infinite: true,
@@ -57,43 +56,70 @@ const CustomCarousel = () => {
     arrows: false,
   };
 
-  // Mobile slider
   const mobileSettings = {
     dots: true,
-    infinite: false,
+    infinite: true,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    autoplay: false,
-    cssEase: "ease",
-    arrows: true,
+    autoplay: true,
+    arrows: false,
   };
 
-  // Wait for client mount
   if (!mounted) return null;
-
-  // Skeleton slides while loading
-  const skeletonSlides = Array.from({ length: 3 }).map((_, i) => (
-    <div key={i} className={styles.skeletonSlide}></div>
-  ));
 
   return (
     <main className={styles.carousel_main_wrap}>
       <Slider {...(isMobile ? mobileSettings : desktopSettings)}>
-        {loading || banners.length === 0
-          ? skeletonSlides
-          : banners.map((item, i) => (
-              <div key={i} className={styles.banner_item}>
-                <Image
-                  src={item.imageUrl}
-                  alt={`banner-${i}`}
-                  width={800}
-                  height={600}
-                  className={styles.banner_image}
-                  priority
-                />
-              </div>
-            ))}
+        {banners.map((item, i) => (
+          <div key={i} className={styles.banner_item}>
+            <div className={styles.imageWrapper}>
+              <Image
+                src={item.imageUrl}
+                alt={`banner-${i}`}
+                width={800}
+                height={600}
+                className={`${styles.banner_image} ${
+                  isMobile ? styles.mobileBanner : ""
+                }`}
+                priority
+              />
+
+              {/* Mobile top overlay */}
+              {isMobile && (
+                <div className={styles.mobileOverlay}>
+                  <div className={styles.mobileHeader}>
+                    <button className={styles.iconButton} aria-label="Menu">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+
+                    <div className={styles.searchWrapper}>
+                      <svg className={styles.searchIcon} width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        className={styles.searchInput}
+                      />
+                    </div>
+
+                    <button className={styles.iconButton} aria-label="Shopping bag">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" strokeWidth="2"/>
+                        <path d="M16 10a4 4 0 01-8 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </Slider>
     </main>
   );

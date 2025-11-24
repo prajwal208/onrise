@@ -8,7 +8,7 @@ import HeroWords from "../HeroWords/HeroWords";
 import ProductSection from "../ProductSection/ProductSection";
 import OfferMarquee from "@/component/OfferMarquee/OfferMarquee";
 
-import styles from "./home.module.scss"; // <-- Import SCSS
+import styles from "./home.module.scss";
 
 const Home = () => {
   const [showOffer, setShowOffer] = useState(false);
