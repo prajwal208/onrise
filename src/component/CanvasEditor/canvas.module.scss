@@ -36,9 +36,7 @@
 @import url("https://fonts.cdnfonts.com/css/tigerland");
 @import url("https://fonts.cdnfonts.com/css/tigerlily");
 
-// ──────────────────────────────
-// Layout
-// ──────────────────────────────
+
 .editorWrapper {
   position: relative;
   width: fit-content;
@@ -74,14 +72,10 @@
   }
 }
 
-// ──────────────────────────────
-// Main Floating Toolbar (Always visible)
-// ──────────────────────────────
 .floatingToolbar {
   position: absolute;
   left: 50%;
-
-  bottom: -132px;
+  bottom: 0;
   transform: translateX(-50%);
   background: #fdf1e4;
   border-radius: 50px;
@@ -99,12 +93,16 @@
     padding: 16px;
     justify-content: center;
 
+    .floatingToolbar{
+      bottom: 100px;
+    }
+
   }
    @media (max-width: 440px) {
     gap: 18px;
     padding: 16px;
     justify-content: center;
-      bottom: -12px;
+      bottom: 0;
   }
 }
 
