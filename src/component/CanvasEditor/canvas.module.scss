@@ -205,7 +205,7 @@
 
 // Font buttons
 .fontOption {
-  background: #ffd392;
+  background: transparent;
   border: none;
   border-radius:5px;
   font-size: 14px;
@@ -215,8 +215,8 @@
   padding: 0 4px;
 
   &.active {
-    background: #ff6b00;
-    color: white;
+    background: #ffd392;
+   
   }
 }
 

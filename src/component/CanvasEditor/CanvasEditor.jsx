@@ -146,8 +146,8 @@ export default function CanvasEditor({ product, setPrintingImg }) {
               illustrationUrl,
               (illuImg) => {
                 if (!illuImg.width) return;
-                const scaleX = (SAFE.width / illuImg.width) * 1.2;
-                const scaleY = (SAFE.height / illuImg.height) * 1.2;
+                const scaleX = (SAFE.width / illuImg.width) * 0.5;
+                const scaleY = (SAFE.height / illuImg.height) * 0.5;
                 const scale = Math.min(scaleX, scaleY);
                 illuImg.set({
                   left:
@@ -389,16 +389,20 @@ export default function CanvasEditor({ product, setPrintingImg }) {
                   const mapped = fontMap[fontName] || fontName;
                   const isActive = selectedFont === mapped;
                   return (
+                    <>
                     <button
                       key={fontName}
                       onClick={() => onFontSelect(fontName)}
                       className={`${styles.fontOption} ${
-                        isActive ? styles.activeFont : ""
+                        isActive ? styles.active : ""
                       }`}
                       style={{ fontFamily: `'${mapped}', cursive` }}
                     >
                       {fontName}
+                     
                     </button>
+                     <div style={{border:"1px solid #b3a99b"}}></div>
+                     </>
                   );
                 })}
               </div>
