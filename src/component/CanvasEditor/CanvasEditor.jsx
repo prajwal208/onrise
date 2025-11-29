@@ -4,6 +4,9 @@ import { ChevronLeft, ShoppingBag, Heart, Share2 } from "lucide-react";
 import styles from "./canvas.module.scss";
 import { COLORS, fontMap, FONTS, SIZES } from "@/constants";
 import { useRouter } from "next/navigation";
+import bag from "../../assessts/bag.svg"
+import share from "../../assessts/share.svg"
+import Image from "next/image";
 
 export default function CanvasEditor({
   product,
@@ -23,6 +26,7 @@ export default function CanvasEditor({
   const [isWishlisted, setIsWishlisted] = useState(product?.isInWishlist);
   const [fonts, setFonts] = useState([]);
   const router = useRouter();
+  const count = localStorage.getItem("count")
 
   const loadFont = async (fontName) => {
     if (!fontName) return;
@@ -364,7 +368,9 @@ export default function CanvasEditor({
   const handleWishlistClick = async () => {
     try {
       const res = await addToWishlist();
-      setIsWishlisted(true);
+      if(res?.status === 200){
+        setIsWishlisted(true);
+      }
     } catch (err) {
       console.log("Failed to add wishlist:", err);
     }
@@ -378,17 +384,18 @@ export default function CanvasEditor({
       <div className={styles.mobileIconsContainer}>
         <div className={styles.mobileIconsRight}>
           <button className={styles.mobileIcon} onClick={() => {}}>
-            <ShoppingBag size={20} />
+             {count > "0" && <span className={styles.badge}>{count}</span>}
+            <Image src={bag}/>
           </button>
           <button className={styles.mobileIcon} onClick={handleWishlistClick}>
             <Heart
-              size={20}
+              size={40}
               stroke={isWishlisted ? "red" : "black"}
               fill={isWishlisted ? "red" : "transparent"}
             />
           </button>
           <button className={styles.mobileIcon} onClick={handleShare}>
-            <Share2 size={20} />
+            <Image src={share}/>
           </button>
         </div>
       </div>
