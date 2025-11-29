@@ -10,7 +10,6 @@ export default function CanvasEditor({
   setPrintingImg,
   addToWishlist,
 }) {
-  console.log(product, "oiiiososo");
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
   const activeTextRef = useRef(null);
@@ -22,25 +21,40 @@ export default function CanvasEditor({
   const [selectedSize, setSelectedSize] = useState(28);
   const [activeTab, setActiveTab] = useState("font");
   const [isWishlisted, setIsWishlisted] = useState(product?.isInWishlist);
-  const router = useRouter()
+  const [fonts, setFonts] = useState([]);
+  const router = useRouter();
 
-  console.log(isMobile);
-  console.log(window.innerWidth, "window.innerWidth");
   const loadFont = async (fontName) => {
     if (!fontName) return;
 
+    // Use fontMap to match correct system name if needed
+    const fileName = fontMap[fontName] || fontName;
+
     const font = new FontFace(
-      fontName,
-      `url(https://fonts.cdnfonts.com/s/${fontName})`
+      fileName,
+      `url(/fonts/${fileName}.ttf)` // <-- Local font loading
     );
 
     try {
       await font.load();
       document.fonts.add(font);
     } catch (e) {
-      console.warn("Font failed loading:", fontName);
+      console.warn("Local font failed loading:", fileName, e);
     }
   };
+
+  useEffect(() => {
+    const fetchFonts = async () => {
+      const res = await fetch("/api/fonts");
+      const data = await res.json();
+
+      data.forEach((font) => loadFont(font));
+
+      setFonts(data);
+    };
+
+    fetchFonts();
+  }, []);
 
   const defaultFontSize = product?.fontSize || selectedSize;
   const defaultFontFamily =
@@ -183,7 +197,7 @@ export default function CanvasEditor({
 
   useEffect(() => {
     Object.values(fontMap).forEach((font) => {
-      document.fonts.load(`16px ${font}`);
+      loadFont(font);
     });
   }, []);
 
@@ -329,8 +343,10 @@ export default function CanvasEditor({
     });
   };
 
-  const onFontSelect = (fontName) => {
+  const onFontSelect = async (fontName) => {
     const mapped = fontMap[fontName] || fontName;
+
+    await loadFont(mapped);
     setSelectedFont(mapped);
     applyToActiveText({ fontFamily: mapped });
   };
@@ -431,23 +447,23 @@ export default function CanvasEditor({
           <div className={styles.optionsPanel}>
             {activeTab === "font" && (
               <div className={styles.fontOptions}>
-                {FONTS.map((fontName) => {
-                  const mapped = fontMap[fontName] || fontName;
-                  const isActive = selectedFont === mapped;
+                {fonts.map((fontName) => {
+                  const isActive = selectedFont === fontName;
+
                   return (
-                    <>
+                    <React.Fragment key={fontName}>
                       <button
-                        key={fontName}
                         onClick={() => onFontSelect(fontName)}
                         className={`${styles.fontOption} ${
                           isActive ? styles.active : ""
                         }`}
-                        style={{ fontFamily: `'${mapped}', cursive` }}
+                        style={{ fontFamily: fontName }} // <-- Fix: no quotes needed
                       >
                         {fontName}
                       </button>
+
                       <div style={{ border: "1px solid #b3a99b" }}></div>
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </div>

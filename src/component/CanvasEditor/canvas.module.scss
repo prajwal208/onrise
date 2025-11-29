@@ -73,14 +73,14 @@
     justify-content: center;
 
     .floatingToolbar {
-      bottom: 160px;
+      bottom: 180px;
     }
   }
   @media (max-width: 440px) {
     gap: 28px;
     padding: 0 16px;
     justify-content: center;
-    bottom: 100;
+    bottom: 180;
   }
 }
 
@@ -213,7 +213,7 @@
   background: transparent;
   border: none;
   border-radius: 5px;
-  font-size: 14px;
+  font-size: 20px;
   white-space: nowrap;
   cursor: pointer;
   transition: 0.2s;
