@@ -3,8 +3,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ShoppingBag, Heart, Share2 } from "lucide-react";
 import styles from "./canvas.module.scss";
 import { COLORS, fontMap, FONTS, SIZES } from "@/constants";
+import { useRouter } from "next/navigation";
 
-export default function CanvasEditor({ product, setPrintingImg }) {
+export default function CanvasEditor({
+  product,
+  setPrintingImg,
+  addToWishlist,
+}) {
   console.log(product, "oiiiososo");
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
@@ -16,6 +21,9 @@ export default function CanvasEditor({ product, setPrintingImg }) {
   const [selectedColor, setSelectedColor] = useState("#000000");
   const [selectedSize, setSelectedSize] = useState(28);
   const [activeTab, setActiveTab] = useState("font");
+  const [isWishlisted, setIsWishlisted] = useState(product?.isInWishlist);
+  const router = useRouter()
+
   console.log(isMobile);
   console.log(window.innerWidth, "window.innerWidth");
   const loadFont = async (fontName) => {
@@ -139,7 +147,7 @@ export default function CanvasEditor({ product, setPrintingImg }) {
       (shirtImg) => {
         if (!shirtImg.width) return;
         const scale = (canvas.width / shirtImg.width) * 0.68;
-        shirtImg.set({ scaleX: scale, scaleY: scale, top: 100, left: 100});
+        shirtImg.set({ scaleX: scale, scaleY: scale, top: 100, left: 100 });
         canvas.setBackgroundImage(shirtImg, () => {
           canvas.renderAll();
           if (illustrationUrl) {
@@ -147,13 +155,13 @@ export default function CanvasEditor({ product, setPrintingImg }) {
               illustrationUrl,
               (illuImg) => {
                 if (!illuImg.width) return;
-                const scaleX = (SAFE.width / illuImg.width) * 1.2;
-                const scaleY = (SAFE.height / illuImg.height) * 1.2;
+                const scaleX = (SAFE.width / illuImg.width) * 0.95;
+                const scaleY = (SAFE.height / illuImg.height) * 0.95;
                 const scale = Math.min(scaleX, scaleY);
                 illuImg.set({
                   left:
                     SAFE.left + (SAFE.width - illuImg.width * scale) / 2 + 40,
-                  top: SAFE.top + (SAFE.height - illuImg.height * scale) / 2 ,
+                  top: SAFE.top + (SAFE.height - illuImg.height * scale) / 2,
                   scaleX: scale,
                   scaleY: scale,
                   selectable: false,
@@ -215,7 +223,7 @@ export default function CanvasEditor({ product, setPrintingImg }) {
       product?.presetText || "YOUR TEXT HERE",
       {
         left: SAFE.left + 33,
-        top: topPos - 20,
+        top: topPos - 10,
         width: SAFE.width,
         fontSize: defaultFontSize,
         fontFamily: defaultFontFamily,
@@ -337,15 +345,31 @@ export default function CanvasEditor({ product, setPrintingImg }) {
     applyToActiveText({ fontSize: s });
   };
 
+  const handleWishlistClick = async () => {
+    try {
+      const res = await addToWishlist();
+      setIsWishlisted(true);
+    } catch (err) {
+      console.log("Failed to add wishlist:", err);
+    }
+  };
+
   return (
     <div className={styles.editorWrapper}>
+      <div className={styles.back} onClick={() => router.back()}>
+        <ChevronLeft size={30} />
+      </div>
       <div className={styles.mobileIconsContainer}>
         <div className={styles.mobileIconsRight}>
           <button className={styles.mobileIcon} onClick={() => {}}>
             <ShoppingBag size={20} />
           </button>
-          <button className={styles.mobileIcon} onClick={() => {}}>
-            <Heart size={20} />
+          <button className={styles.mobileIcon} onClick={handleWishlistClick}>
+            <Heart
+              size={20}
+              stroke={isWishlisted ? "red" : "black"}
+              fill={isWishlisted ? "red" : "transparent"}
+            />
           </button>
           <button className={styles.mobileIcon} onClick={handleShare}>
             <Share2 size={20} />

@@ -32,7 +32,7 @@ const ProductDetails = () => {
   });
   const [loader, setLoader] = useState(false);
 
-  console.log(sizeInfo,"uuuttt")
+  console.log(sizeInfo?.options.length, "uuuttt");
 
   const accessToken = Cookies.get("idToken");
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -170,7 +170,7 @@ const ProductDetails = () => {
       (item) => item.value === size
     );
 
-    console.log(match,"ieyyerersxxx")
+    console.log(match, "ieyyerersxxx");
 
     setSizeInfo(match || null);
   };
@@ -184,6 +184,7 @@ const ProductDetails = () => {
           product={product}
           onDesignChange={handleDesignChange}
           setPrintingImg={setPrintingImg}
+          addToWishlist={addToWishlist}
         />
       ) : (
         <Image
@@ -216,17 +217,21 @@ const ProductDetails = () => {
           )}
         </div>
 
-        {sizeInfo  && (
-          <div className={styles.sizeDetailsBox}>
-            <span>Chest: {sizeInfo?.options[0]?.value} cm</span>
-            <span>Length: {sizeInfo?.options[1]?.value} cm</span>
-            <span>Sleeves Length: {sizeInfo?.options[2]?.value} cm</span>
-          </div>
-        )}
-
         {product?.configuration?.[0]?.options?.length > 0 && (
           <div className={styles.sizes}>
             <h4>SELECT SIZE</h4>
+            {sizeInfo && (
+              <div className={styles.sizeDetailsBox}>
+                <span>Chest: {sizeInfo?.options[0]?.value} cm</span>
+                <span>Length: {sizeInfo?.options[1]?.value} cm</span>
+                {
+                  sizeInfo?.options.length > 2 &&
+                  <span>Sleeves Length: {sizeInfo?.options[2]?.value} cm</span>
+                }
+                
+              </div>
+            )}
+
             <div className={styles.sizeOptions}>
               {product?.configuration[0].options.map((s) => (
                 <button

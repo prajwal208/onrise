@@ -227,7 +227,7 @@
 .colorOptions,
 .sizeOptions {
   display: flex;
-  gap: 14px;
+  gap: 4px;
   justify-content: left;
   padding: 8px 0;
   background-color: #fff2de;
@@ -357,6 +357,18 @@
 @media screen and (max-width: 300px) {
   .toolButton {
     padding: 5px;
+  }
+}
+
+.back{
+  position: absolute;
+  top: 10px;
+  left: 0px;
+  display: none;
+  z-index: 9999;
+
+  @media screen and (max-width: 768px) {
+    display: flex;
   }
 }
 
