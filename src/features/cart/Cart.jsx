@@ -326,7 +326,7 @@ const Cart = () => {
             <div className={styles.rightSection}>
               <DefaultAddress
                 addressList={addressList}
-                onChange={() => console.log("Change Address Clicked")}
+                onChange={() => router.push('/address')}
               />
               <PriceList
                 bagTotal={bagTotal}
