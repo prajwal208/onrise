@@ -18,8 +18,11 @@ const Cart = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [cartItems, setCartItems] = useState([]);
   const [addressList, setAddressList] = useState([]);
+  const [offerData,setOfferData] = useState([])
   const router = useRouter();
   const accessToken = Cookies.get("idToken");
+
+  console.log(offerData,"sbbsiieiexxxx")
 
   useEffect(() => {
     db.cart.toArray().then(setCartItems);
@@ -35,6 +38,27 @@ const Cart = () => {
       )
     );
   };
+
+    
+
+   const getOfferData = async () => {
+    try {
+      const res = await api.get(`/v2/giftreward`, {
+        headers: {
+          "x-api-key":
+            "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+        },
+      });
+      setOfferData(res?.data?.data || []);
+    } catch (error) {
+      console.error(" Error fetching reward:", error);
+      toast.error("Failed to fetch cart.");
+    }
+  };
+
+  useEffect(() => {
+    getOfferData()
+  },[])
 
   const calculateTotal = () => {
     return cartItems.reduce((sum, item) => {
@@ -308,6 +332,7 @@ const Cart = () => {
                 bagTotal={bagTotal}
                 grandTotal={grandTotal}
                 handlePayNow={handlePayNow}
+                offerData={offerData}
               />
             </div>
           </div>
