@@ -56,7 +56,7 @@
   transform: translateX(-50%);
   background: #fdf1e4;
   border-radius: 50px;
-  padding: 0 24px;
+  padding: 10px 24px;
   display: flex;
   align-items: center;
   gap: 28px;
@@ -192,7 +192,7 @@
   left: 50%;
   transform: translateX(-50%);
 
-  width: 100vw;         // ⬅ full width of parent
+  width: 38vw;         // ⬅ full width of parent
   overflow-x: auto;     // ⬅ horizontal scroll
 
   background-color: #f3d4a7;
@@ -206,6 +206,12 @@
   }
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+@media screen and (max-width:600px){
+  .optionsPanel{
+    width: 100vw;
+  }
 }
 
 
