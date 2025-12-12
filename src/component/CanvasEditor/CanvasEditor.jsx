@@ -248,76 +248,55 @@ export default function CanvasEditor({
     const fontName =
       fontMap[product?.fontFamily] || product?.fontFamily || selectedFont;
 
-    // Load matching font object from API response
     const fontData = fonts.find((f) => f.family === fontName);
 
     if (fontData) {
       await loadFont(fontData);
-
-      // Ensure browser fully registers font BEFORE rendering
       await document.fonts.ready;
     }
+
+    const MAX_LINES = 2;
 
     const text = new window.fabric.Textbox(
       product?.presetText || "YOUR TEXT HERE",
       {
-        left: SAFE.left + 30,
+        left: SAFE.left + 50,
         top: topPos,
-        width: SAFE.width - 10,
+        width: SAFE.width - 60,
         fontSize: defaultFontSize,
         fontFamily: defaultFontFamily,
         fill: defaultFontColor,
         textAlign: "center",
         fontWeight: "normal",
-        splitByGrapheme: false,
+        lineHeight: 1.2,
+        splitByGrapheme: true,
         editable: true,
         lockMovementX: true,
         lockMovementY: true,
         hasControls: false,
         hasBorders: false,
         selectable: true,
+        maxLines: MAX_LINES,
       }
     );
 
-    setPrintingImg({
-      textColor: text.fill,
-      fontFamily: text.fontFamily,
-      printText: text.text,
-      fontSize: text.fontSize,
+    // Override the internal rendering to strictly limit visible lines
+    text._renderTextLinesBackground = function (ctx) {
+      // Custom background rendering (optional)
+    };
+
+    // Force re-wrap on text change to respect maxLines
+    text.on("changed", () => {
+      const lines = text.textLines;
+      if (lines.length > MAX_LINES) {
+        // Keep only first 2 lines
+        const visibleText = lines.slice(0, MAX_LINES).join("\n");
+        text.set("text", visibleText);
+        canvas.requestRenderAll();
+      }
     });
 
-    text.on("selected", () => {
-      activeTextRef.current = text;
-      setSelectedFont(text.fontFamily || "Arial");
-      setSelectedColor(text.fill || "#000");
-      setSelectedSize(text.fontSize || 28);
-      setIsEditing(!!text.isEditing);
-    });
-
-    text.on("editing:entered", () => {
-      try {
-        const ta = text.hiddenTextarea;
-        if (ta) {
-          ta.style.fontFamily = text.fontFamily || "Arial";
-          ta.style.color = text.fill || "#000";
-          ta.style.fontSize = (text.fontSize || 28) + "px";
-
-          setTimeout(() => {
-            const scrollAmount = window.innerHeight * 0.1;
-            window.scrollTo({
-              top: window.scrollY + scrollAmount,
-              behavior: "smooth",
-            });
-          }, 300);
-        }
-      } catch (e) {}
-
-      activeTextRef.current = text;
-      setIsEditing(true);
-    });
-
-    text.on("editing:exited", () => setIsEditing(false));
-
+    // Sync printing data
     const syncPrinting = () =>
       setPrintingImg({
         textColor: text.fill,
