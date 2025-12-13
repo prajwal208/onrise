@@ -340,7 +340,7 @@ export default function CanvasEditor({
     }
 
     const MAX_LINES = 2;
-    const MAX_CHARS_PER_LINE = 24;
+    const MAX_CHARS_PER_LINE = 30;
 
     const truncateText = (text) => {
       const lines = text.split("\n");
