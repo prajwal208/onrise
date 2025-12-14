@@ -299,15 +299,17 @@ export default function CanvasEditor({
       await document.fonts.ready;
     }
 
+    const PLACEHOLDER_TEXT = "YOUR TEXT HERE";
+
     const text = new window.fabric.Textbox(
-      product?.presetText || "YOUR TEXT HERE",
+      product?.presetText || PLACEHOLDER_TEXT,
       {
         left: SAFE.left + 24 + (SAFE.width - CONTAINER_WIDTH) / 2,
         top: topPos + 148,
         width: CONTAINER_WIDTH,
         fontSize: defaultFontSize,
         fontFamily: defaultFontFamily,
-        fill: defaultFontColor,
+        fill: product?.presetText ? defaultFontColor : "#999",
         textAlign: "center",
         fontWeight: "normal",
         lineHeight: 1,
@@ -327,42 +329,60 @@ export default function CanvasEditor({
       }
     );
 
-    // Store scroll position
+    // ================================
+    // Placeholder state
+    // ================================
+    text.__placeholder = PLACEHOLDER_TEXT;
+    text.__isPlaceholder = !product?.presetText;
+
+    // ================================
+    // Scroll state
+    // ================================
     let scrollOffset = 0;
 
-    // Override _wrapText to prevent height changes and calculate proper wrapping
+    // ================================
+    // Lock dimensions
+    // ================================
+    const lockDimensions = () => {
+      Object.defineProperty(text, "width", {
+        get: () => CONTAINER_WIDTH,
+        set: () => {},
+        configurable: true,
+      });
+
+      Object.defineProperty(text, "height", {
+        get: () => CONTAINER_HEIGHT,
+        set: () => {},
+        configurable: true,
+      });
+    };
+
+    lockDimensions();
+
+    // ================================
+    // Override wrap & render
+    // ================================
     const originalWrapText = text._wrapText;
     text._wrapText = function (lines, desiredWidth) {
       const result = originalWrapText.call(this, lines, desiredWidth);
-      // Force fixed height, no matter what
       this._textLines = result;
       return result;
     };
 
-    // Override _renderTextLinesBackground and related methods to respect scroll
     const originalRenderText = text._renderText;
     text._renderText = function (ctx) {
       ctx.save();
-
-      // Apply scroll offset
-      if (scrollOffset > 0) {
-        ctx.translate(0, -scrollOffset);
-      }
-
+      ctx.translate(0, -scrollOffset);
       originalRenderText.call(this, ctx);
       ctx.restore();
     };
 
-    // Override _render to clip content and maintain fixed dimensions
     const originalRender = text._render;
     text._render = function (ctx) {
-      // Force dimensions before any render
       this.width = CONTAINER_WIDTH;
       this.height = CONTAINER_HEIGHT;
 
       ctx.save();
-
-      // Clip to fixed container bounds
       ctx.beginPath();
       ctx.rect(
         -CONTAINER_WIDTH / 2,
@@ -376,103 +396,63 @@ export default function CanvasEditor({
       ctx.restore();
     };
 
-    // Completely lock dimensions
-    const lockDimensions = () => {
-      Object.defineProperty(text, "width", {
-        get: function () {
-          return CONTAINER_WIDTH;
-        },
-        set: function (value) {
-          /* Locked */
-        },
-        configurable: true,
-      });
-
-      Object.defineProperty(text, "height", {
-        get: function () {
-          return CONTAINER_HEIGHT;
-        },
-        set: function (value) {
-          /* Locked */
-        },
-        configurable: true,
-      });
-    };
-
-    lockDimensions();
-
-    // Style textarea for scrolling
+    // ================================
+    // Textarea styling
+    // ================================
     const styleTextarea = () => {
-      try {
-        const ta = text.hiddenTextarea;
-        if (ta) {
-          ta.style.position = "fixed";
-          ta.style.width = `${CONTAINER_WIDTH}px`;
-          ta.style.height = `${CONTAINER_HEIGHT}px`;
-          ta.style.maxHeight = `${CONTAINER_HEIGHT}px`;
-          ta.style.minHeight = `${CONTAINER_HEIGHT}px`;
-          ta.style.overflowY = "scroll"; // Always show scrollbar
-          ta.style.overflowX = "hidden";
-          ta.style.whiteSpace = "pre-wrap";
-          ta.style.wordWrap = "break-word";
-          ta.style.wordBreak = "break-word";
-          ta.style.boxSizing = "border-box";
-          ta.style.padding = "8px";
-          ta.style.resize = "none";
-          ta.style.border = "1px solid #ddd";
-          ta.style.borderRadius = "4px";
-          ta.style.background = "rgba(255, 255, 255, 0.95)";
-          ta.style.zIndex = "10000";
-          ta.style.fontFamily = text.fontFamily;
-          ta.style.fontSize = text.fontSize + "px";
-          ta.style.color = text.fill;
-          ta.style.textAlign = text.textAlign;
-          ta.style.lineHeight = text.lineHeight;
+      const ta = text.hiddenTextarea;
+      if (!ta) return;
 
-          if (isIOS()) {
-            ta.style.webkitOverflowScrolling = "touch";
-            ta.style.transform = "translate3d(0,0,0)";
-          }
+      ta.style.position = "fixed";
+      ta.style.width = `${CONTAINER_WIDTH}px`;
+      ta.style.height = `${CONTAINER_HEIGHT}px`;
+      ta.style.overflowY = "scroll";
+      ta.style.overflowX = "hidden";
+      ta.style.whiteSpace = "pre-wrap";
+      ta.style.wordBreak = "break-word";
+      ta.style.boxSizing = "border-box";
+      ta.style.padding = "8px";
+      ta.style.resize = "none";
+      ta.style.border = "1px solid #ddd";
+      ta.style.borderRadius = "4px";
+      ta.style.background = "rgba(255,255,255,0.95)";
+      ta.style.zIndex = "10000";
+      ta.style.fontFamily = text.fontFamily;
+      ta.style.fontSize = text.fontSize + "px";
+      ta.style.color = text.fill;
+      ta.style.textAlign = text.textAlign;
+      ta.style.lineHeight = text.lineHeight;
 
-          const canvasRect = canvasRef.current.getBoundingClientRect();
-          const zoom = canvas.getZoom();
-          const textLeft = text.left * zoom + canvasRect.left;
-          const textTop = text.top * zoom + canvasRect.top;
-
-          ta.style.left = `${textLeft}px`;
-          ta.style.top = `${textTop}px`;
-
-          // Sync scroll with canvas rendering
-          ta.addEventListener("scroll", () => {
-            canvas.requestRenderAll();
-          });
-        }
-      } catch (e) {
-        console.log("Textarea styling failed", e);
+      if (isIOS()) {
+        ta.style.webkitOverflowScrolling = "touch";
+        ta.style.transform = "translate3d(0,0,0)";
       }
+
+      const canvasRect = canvasRef.current.getBoundingClientRect();
+      const zoom = canvas.getZoom();
+      ta.style.left = `${text.left * zoom + canvasRect.left}px`;
+      ta.style.top = `${text.top * zoom + canvasRect.top}px`;
     };
 
-    const updateScrollToCursor = (text) => {
+    // ================================
+    // Scroll logic (extra upward)
+    // ================================
+    const updateScrollToCursor = () => {
       const lineHeightPx = text.fontSize * text.lineHeight;
-      const cursor = text.get2DCursorLocation();
-      const cursorLine = cursor.lineIndex;
-
+      const cursorLine = text.get2DCursorLocation().lineIndex;
       const cursorY = cursorLine * lineHeightPx;
 
-      // 🔥 Extra breathing space (adjustable)
-      const TOP_PADDING = 12;
-      const BOTTOM_PADDING = 18;
+      const TOP_PADDING = 14;
+      const BOTTOM_PADDING = 20;
 
       const visibleTop = scrollOffset + TOP_PADDING;
       const visibleBottom = scrollOffset + CONTAINER_HEIGHT - BOTTOM_PADDING;
 
-      // Scroll DOWN earlier
       if (cursorY + lineHeightPx > visibleBottom) {
         scrollOffset =
           cursorY + lineHeightPx - (CONTAINER_HEIGHT - BOTTOM_PADDING);
       }
 
-      // Scroll UP earlier
       if (cursorY < visibleTop) {
         scrollOffset = cursorY - TOP_PADDING;
       }
@@ -480,84 +460,81 @@ export default function CanvasEditor({
       scrollOffset = Math.max(0, scrollOffset);
     };
 
-    // Handle text input with dimension locking
-    const handleTextInput = () => {
-      // Force lock dimensions - CRITICAL
-      updateScrollToCursor(text);
+    // ================================
+    // Handle typing
+    // ================================
+    const handleTextChange = () => {
+      // Restore placeholder
+      if (text.text.trim() === "") {
+        text.__isPlaceholder = true;
+        text.set({
+          text: text.__placeholder,
+          fill: "#999",
+        });
+        scrollOffset = 0;
+        canvas.requestRenderAll();
+        styleTextarea();
+        return;
+      }
 
-      // Clear cache to force recalculation
+      // Remove placeholder
+      if (text.__isPlaceholder) {
+        text.__isPlaceholder = false;
+        text.set({ fill: defaultFontColor });
+      }
+
+      updateScrollToCursor();
       text._clearCache();
-
-      // Re-apply dimension locks
       lockDimensions();
-
       canvas.requestRenderAll();
       styleTextarea();
 
       setPrintingImg({
         textColor: text.fill,
         fontFamily: text.fontFamily,
-        printText: text.text,
+        printText: text.__isPlaceholder ? "" : text.text,
         fontSize: text.fontSize,
       });
     };
 
-    text.on("changed", handleTextInput);
-    text.on("modified", handleTextInput);
-    text.on("scaling", () => {
-      text.width = CONTAINER_WIDTH;
-      text.height = CONTAINER_HEIGHT;
-      canvas.requestRenderAll();
-    });
+    text.on("changed", handleTextChange);
+    text.on("modified", handleTextChange);
 
     text.on("editing:entered", () => {
-      text.width = CONTAINER_WIDTH;
-      text.height = CONTAINER_HEIGHT;
       styleTextarea();
 
-      if (isIOS()) {
-        setTimeout(() => {
-          focusTextarea(text);
-          styleTextarea();
-        }, 10);
+      setTimeout(() => {
+        const ta = text.hiddenTextarea;
+        if (!ta) return;
 
-        setTimeout(() => {
-          focusTextarea(text);
-          updateScrollToCursor(text);
-          canvas.requestRenderAll();
-        }, 20);
-      }
+        if (text.__isPlaceholder) {
+          ta.value = "";
+          ta.setSelectionRange(0, 0);
+        } else {
+          const len = ta.value.length;
+          ta.focus();
+          ta.setSelectionRange(len, len);
+        }
+
+        updateScrollToCursor();
+        canvas.requestRenderAll();
+      }, 20);
     });
 
-    text.on("editing:exited", () => {
-      text.width = CONTAINER_WIDTH;
-      text.height = CONTAINER_HEIGHT;
-      canvas.renderAll();
-    });
-
+    // ================================
+    // Add to canvas
+    // ================================
     canvas.add(text);
     canvas.setActiveObject(text);
 
-    setTimeout(() => {
-      text.set({
-        width: CONTAINER_WIDTH,
-        height: CONTAINER_HEIGHT,
-      });
-      styleTextarea();
-    }, 50);
-
-    if (isIOS()) {
-      setTimeout(() => {
+    setTimeout(
+      () => {
         text.enterEditing();
         styleTextarea();
-        focusTextarea(text);
         canvas.requestRenderAll();
-      }, 100);
-    } else {
-      text.enterEditing();
-      styleTextarea();
-      canvas.requestRenderAll();
-    }
+      },
+      isIOS() ? 100 : 30
+    );
   };
 
   const startTextEditing = () => {
