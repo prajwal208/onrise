@@ -37,7 +37,7 @@ export default function CanvasEditor({
   const loadedFonts = new Set();
 
   // Fixed container dimensions
-  const CONTAINER_WIDTH = 200;
+  const CONTAINER_WIDTH = 170;
   const CONTAINER_HEIGHT = 70;
 
   const loadFont = async (font) => {
@@ -332,8 +332,8 @@ export default function CanvasEditor({
     const text = new window.fabric.Textbox(
       product?.presetText || "YOUR TEXT HERE",
       {
-        left: SAFE.left + 20 + (SAFE.width - CONTAINER_WIDTH) / 2,
-        top: topPos + 175,
+        left: SAFE.left + 24 + (SAFE.width - CONTAINER_WIDTH) / 2,
+        top: topPos + 168,
         width: CONTAINER_WIDTH,
         fontSize: defaultFontSize,
         fontFamily: defaultFontFamily,
