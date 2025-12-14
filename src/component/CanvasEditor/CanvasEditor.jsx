@@ -299,6 +299,68 @@ export default function CanvasEditor({
       await document.fonts.ready;
     }
 
+const forceSmartWrap = () => {
+  const ctx = canvas.getContext();
+  ctx.font = `${text.fontSize}px ${text.fontFamily}`;
+
+  const maxWidth = CONTAINER_WIDTH - 16;
+  const lines = text.text.split("\n");
+  let result = [];
+  let cursorShift = 0;
+
+  lines.forEach((line) => {
+    let words = line.split(" ");
+    let currentLine = "";
+
+    words.forEach((word, index) => {
+      const testLine =
+        currentLine.length === 0 ? word : currentLine + " " + word;
+
+      const width = ctx.measureText(testLine).width;
+
+      // ✅ Word fits → keep going
+      if (width <= maxWidth) {
+        currentLine = testLine;
+        return;
+      }
+
+      // ✅ Word does NOT fit, but line has content → move word to next line
+      if (ctx.measureText(word).width <= maxWidth) {
+        result.push(currentLine);
+        currentLine = word;
+        return;
+      }
+
+      // ❌ Single word too long → break by character
+      let chunk = "";
+      for (let char of word) {
+        const testChunk = chunk + char;
+        if (ctx.measureText(testChunk).width > maxWidth) {
+          result.push(chunk);
+          chunk = char;
+        } else {
+          chunk = testChunk;
+        }
+      }
+
+      currentLine = chunk;
+    });
+
+    result.push(currentLine);
+  });
+
+  const newText = result.join("\n");
+
+  if (newText !== text.text) {
+    const cursorPos = text.selectionStart;
+    text.text = newText;
+    text.selectionStart = cursorPos + cursorShift;
+    text.selectionEnd = text.selectionStart;
+  }
+};
+
+
+
     const PLACEHOLDER_TEXT = "YOUR TEXT HERE";
 
     const text = new window.fabric.Textbox(
@@ -313,7 +375,8 @@ export default function CanvasEditor({
         textAlign: "center",
         fontWeight: "normal",
         lineHeight: 1,
-        splitByGrapheme: true,
+        splitByGrapheme: false,
+        breakWords: true,
         editable: true,
         lockMovementX: true,
         lockMovementY: true,
@@ -455,11 +518,11 @@ export default function CanvasEditor({
     // Scroll logic (extra upward)
     // ================================
     const updateScrollToCursor = () => {
-      const LINE_HEIGHT = text.fontSize * text.lineHeight;
+  const LINE_HEIGHT = text.fontSize * text.lineHeight;
       const PADDING_TOP = 8; // textarea padding
       const VISIBLE_LINES = Math.floor(
         (CONTAINER_HEIGHT - PADDING_TOP * 2) / LINE_HEIGHT
-      );
+  );
 
       const cursorLine = text.get2DCursorLocation().lineIndex;
 
@@ -472,50 +535,42 @@ export default function CanvasEditor({
       const nextScrollOffset = targetScrollLine * LINE_HEIGHT;
 
       scrollOffset = Math.max(0, nextScrollOffset);
-    };
+};
+
 
     // ================================
     // Handle typing
     // ================================
     const handleTextChange = () => {
-      // Restore placeholder
-      if (text.text.trim() === "") {
-        text.__isPlaceholder = true;
-        text.set({
-          text: text.__placeholder,
-          fill: "#999",
-        });
-        scrollOffset = 0;
-        canvas.requestRenderAll();
-        styleTextarea();
-        moveCursorToEnd(); // 🔥
-        return;
-      }
+  if (text.text.trim() === "") {
+    text.__isPlaceholder = true;
+    text.set({ text: text.__placeholder, fill: "#999" });
+    scrollOffset = 0;
+    canvas.requestRenderAll();
+    styleTextarea();
+    moveCursorToEnd();
+    return;
+  }
 
-      // Remove placeholder
-      if (text.__isPlaceholder) {
-        text.__isPlaceholder = false;
-        text.set({ fill: defaultFontColor });
-      }
+  if (text.__isPlaceholder) {
+    text.__isPlaceholder = false;
+    text.set({ fill: defaultFontColor });
+  }
 
-      updateScrollToCursor();
-      text._clearCache();
-      lockDimensions();
-      canvas.requestRenderAll();
-      styleTextarea();
+  // 🔥 Correct wrapping
+  forceSmartWrap();
 
-      // 🔥 FORCE cursor to end after every change
-      requestAnimationFrame(() => {
-        moveCursorToEnd();
-      });
+  // 🔥 Update scroll AFTER wrap
+  updateScrollToCursor();
 
-      setPrintingImg({
-        textColor: text.fill,
-        fontFamily: text.fontFamily,
-        printText: text.__isPlaceholder ? "" : text.text,
-        fontSize: text.fontSize,
-      });
-    };
+  text._clearCache();
+  lockDimensions();
+  canvas.requestRenderAll();
+  styleTextarea();
+
+  requestAnimationFrame(moveCursorToEnd);
+};
+
 
     text.on("changed", handleTextChange);
     text.on("modified", handleTextChange);
