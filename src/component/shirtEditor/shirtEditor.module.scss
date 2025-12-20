@@ -49,12 +49,7 @@
   }
 }
 
-/* Ensure the img_wrap has a fixed or min-size so the shimmer is visible */
-// .img_wrap {
-//   position: relative;
-//  width: 100%; /* Adjust based on your design */
-// height: 400px; /* Adjust based on your design */
-// }
+
 
 .presetText {
   position: absolute;
@@ -63,7 +58,10 @@
   transform: translate(-50%, -50%);
 
   width: 175px;
-  height: 70px;
+  /* Fixed height: 2 lines based on current font size */
+  height: calc(var(--current-font-size, 28px) * 1.2 * 2);
+  min-height: calc(var(--current-font-size, 28px) * 1.2 * 2);
+  max-height: calc(var(--current-font-size, 28px) * 1.2 * 2);
 
   box-sizing: border-box;
   text-align: center;
@@ -73,22 +71,17 @@
   overflow-wrap: break-word;
   white-space: pre-wrap;
 
-  overflow-y: hidden;
+  overflow: hidden;
   cursor: pointer;
   z-index: 10;
   margin: 0;
+  padding: 0;
 
   /* Hide scrollbars */
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
   }
-}
-
-div.presetText {
-  display: flex;
-  // align-items: center;
-  justify-content: center;
 }
 
 .editInput {
