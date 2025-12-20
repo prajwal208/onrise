@@ -22,7 +22,7 @@ const Cart = () => {
   const router = useRouter();
   const accessToken = Cookies.get("idToken");
 
-  console.log(cartItems,"sjsjduuuiiuuiuiiu")
+  console.log(cartItems?.price,"sjsjduuuiiuuiuiiu")
 
   useEffect(() => {
     db.cart.toArray().then(setCartItems);
@@ -60,10 +60,7 @@ const Cart = () => {
   const calculateTotal = () => {
     return cartItems.reduce((sum, item) => {
       const price =
-        Number(item.price) ||
-        Number(item.totalPrice) ||
-        Number(item.product?.price) ||
-        0;
+        Number(item.discountPrice)
       const qty = Number(item.quantity) || 1;
       return sum + price * qty;
     }, 0);
