@@ -13,6 +13,8 @@ import api from "@/axiosInstance/axiosInstance";
 import { db } from "@/lib/db";
 import Cookies from "js-cookie";
 import { load } from "@cashfreepayments/cashfree-js";
+import DynamicModal from "@/component/Modal/Modal";
+import LoginForm from "../signup/LogIn/LoginForm";
 
 const Cart = () => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -22,6 +24,18 @@ const Cart = () => {
   const [cashfree, setCashfree] = useState(null);
   const router = useRouter();
   const accessToken = Cookies.get("idToken");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
+
+  // useEffect(() => {
+  //   const token = Cookies.get("idToken");
+  //   setIsLoggedIn(!!token);
+  // }, []);
+
+  const handleContinue = () => {
+    setIsLoginModalVisible(false);
+    setIsLoggedIn(true);
+  };
 
   useEffect(() => {
     const initCashfree = async () => {
@@ -58,7 +72,7 @@ const Cart = () => {
   const couponDiscount = 0;
   const grandTotal = bagTotal - couponDiscount;
 
-  console.log(grandTotal)
+  console.log(grandTotal);
 
   const removeFromCart = async (productId) => {
     try {
@@ -101,77 +115,88 @@ const Cart = () => {
   };
 
   // ----------------- Cashfree Integration -----------------
- const handlePayNow = async () => {
-  if (cartItems.length === 0) {
-    toast.warning("Your cart is empty!");
-    return;
-  }
+  const handlePayNow = async () => {
+    const token = Cookies.get("idToken");
 
-  if (!addressList?.[0]?.id) {
-    toast.warning("Please select a shipping address");
-    return;
-  }
-
-  try {
-    const res = await api.post(
-      "/v1/orders/create",
-      {
-        shippingAddressId: addressList[0].id,
-        billingAddressId: addressList[0].id,
-        paymentMethod: "ONLINE",
-        totalAmount: grandTotal,
-        items: [
-          {
-            name: "Product Name",
-            sku: "SKU123",
-            totalPrice: grandTotal,
-            quantity: 2,
-            categoryId: "categoryId1",
-            isCustomizable: false,
-            discount: 0,
-            tax: 12,
-            hsn: 482090,
-          },
-        ],
-      },
-      {
-        headers: {
-          "x-api-key":
-            "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
-        },
-      }
-    );
-
-    const orderData = res?.data?.data;
-
-    console.log("Order response:", orderData?.cashfree?.sessionId);
-
-    const paymentSessionId = orderData?.cashfree?.sessionId;
-
-    if (!paymentSessionId) {
-      toast.error("Payment session not generated");
+    if (!token) {
+      setIsLoginModalVisible(true);
       return;
     }
 
-    const checkoutOptions = {
-      paymentSessionId,
-      redirectTarget: "_self",
-    };
+    if (cartItems.length === 0) {
+      toast.warning("Your cart is empty!");
+      return;
+    }
 
-    cashfree.checkout(checkoutOptions).then((result) => {
-      if (result.error) {
-        toast.error(result.error.message);
-      }
-      if (result.redirect) {
-        console.log("Payment redirection in progress");
-      }
-    });
-  } catch (error) {
-    console.error("Cashfree error:", error);
-    toast.error("Failed to initiate payment.");
-  }
-};
+    if (!addressList?.[0]?.id) {
+      toast.warning("Please select a shipping address");
+      return;
+    }
 
+    try {
+      const res = await api.post(
+        "/v1/orders/create",
+        {
+          shippingAddressId: addressList[0].id,
+          billingAddressId: addressList[0].id,
+          paymentMethod: "ONLINE",
+          totalAmount: grandTotal,
+          items: [
+            {
+              name: "Product Name",
+              sku: "SKU123",
+              totalPrice: grandTotal,
+              quantity: 2,
+              categoryId: "categoryId1",
+              isCustomizable: false,
+              discount: 0,
+              tax: 12,
+              hsn: 482090,
+            },
+          ],
+        },
+        {
+          headers: {
+            "x-api-key":
+              "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+          },
+        }
+      );
+
+      const orderData = res?.data?.data;
+      localStorage.setItem("pendingOrderId", orderData.orderId);
+      localStorage.setItem(
+        "pendingCashfreeOrderId",
+        orderData.cashfree.orderId
+      );
+      localStorage.setItem("pendingOrderAmount", String(grandTotal));
+      console.log("Order response:", orderData?.cashfree?.sessionId);
+
+      const paymentSessionId = orderData?.cashfree?.sessionId;
+
+      if (!paymentSessionId) {
+        toast.error("Payment session not generated");
+        return;
+      }
+
+      const checkoutOptions = {
+        paymentSessionId,
+        redirectTarget: "_self",
+      };
+
+      cashfree.checkout(checkoutOptions).then((result) => {
+        if (result.error) {
+          toast.error(result.error.message);
+        }
+        if (result.redirect) {
+          console.log("Payment redirection in progress");
+        }
+      });
+    } catch (error) {
+      console.error("Cashfree error:", error);
+      toast.error("Failed to initiate payment.");
+    }
+  };
 
   const addToWishlist = async (productId) => {
     if (!accessToken) {
@@ -278,6 +303,17 @@ const Cart = () => {
               />
             </div>
           </div>
+
+          <DynamicModal
+            open={isLoginModalVisible}
+            onClose={() => setIsLoginModalVisible(false)}
+          >
+            <LoginForm
+              onContinue={handleContinue}
+              setIsLoginModalVisible={setIsLoginModalVisible}
+              setIsLoggedIn={setIsLoggedIn}
+            />
+          </DynamicModal>
         </>
       ) : (
         <NoResult
