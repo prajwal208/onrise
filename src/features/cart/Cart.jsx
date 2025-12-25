@@ -1,346 +1,319 @@
 "use client";
-
-import React, { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Plus, Minus, Heart, ChevronLeft } from "lucide-react";
-import Image from "next/image";
+import React, { useEffect, useState } from "react";
+import { Trash2, ChevronLeft } from "lucide-react";
+import styles from "./cart.module.scss";
+import NoResult from "@/component/NoResult/NoResult";
+import { useRouter } from "next/navigation";
+import CartRewards from "./CartRewards/CartRewards";
+import DefaultAddress from "./DefaultAddress/DefaultAddress";
+import PriceList from "./PriceList/PriceList";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Cookies from "js-cookie";
-import { db } from "@/lib/db";
-import styles from "./ProductDetails.module.scss";
 import api from "@/axiosInstance/axiosInstance";
-import BottomSheet from "@/component/BottomSheet/BottomSheet";
-import AddToCartSuccessSheet from "@/component/AddToCartSuccessSheet/AddToCartSuccessSheet";
-import ProductDetailsShimmer from "@/component/ProductDetailsShimmer/ProductDetailsShimmer";
-import Suggested from "@/component/Suggested/Suggested";
-import { useCart } from "@/context/CartContext";
-import bag from "../../../assessts/bag.svg";
-import share from "../../../assessts/share.svg";
-import ShirtEditor from "@/component/shirtEditor/ShirtEditor";
+import { db } from "@/lib/db";
+import Cookies from "js-cookie";
+import { load } from "@cashfreepayments/cashfree-js";
+import DynamicModal from "@/component/Modal/Modal";
+import LoginForm from "../signup/LogIn/LoginForm";
 
-const ProductDetails = () => {
-  const { id } = useParams();
+const Cart = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const [cartItems, setCartItems] = useState([]);
+  const [addressList, setAddressList] = useState([]);
+  const [offerData, setOfferData] = useState([]);
+  const [cashfree, setCashfree] = useState(null);
   const router = useRouter();
-  const { updateCart, cartCount } = useCart();
-  
-  const [product, setProduct] = useState(null);
-  const [selectedSize, setSelectedSize] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState(null);
-  const [sizeInfo, setSizeInfo] = useState(null);
-  const [showSizeSheet, setShowSizeSheet] = useState(false);
-  const [relatedId, setRelatedId] = useState("");
-  const [loader, setLoader] = useState(false);
-  const [relatedData, setRelatedData] = useState([]);
-  const [showSuccessCart, setShowSuccessCart] = useState(false);
-  const [isCustomizable, setIsCustomizable] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
-
   const accessToken = Cookies.get("idToken");
-  const editorRef = useRef(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoginModalVisible, setIsLoginModalVisible] = useState(false);
 
-  // --- Logic Functions ---
+  // useEffect(() => {
+  //   const token = Cookies.get("idToken");
+  //   setIsLoggedIn(!!token);
+  // }, []);
 
-  const handleSizeSelect = (size, autoAdd = false) => {
-    setSelectedSize(size);
-    const match = product?.configuration?.[0]?.options.find(
-      (item) => item.value === size
-    );
-    setSizeInfo(match || null);
+  const handleContinue = () => {
+    setIsLoginModalVisible(false);
+    setIsLoggedIn(true);
+  };
 
-    // If triggered from the BottomSheet, add to cart immediately
-    if (autoAdd) {
-      processAddToCart(size);
+  useEffect(() => {
+    const initCashfree = async () => {
+      const cf = await load({
+        mode: "production",
+      });
+      setCashfree(cf);
+    };
+    initCashfree();
+  }, []);
+
+  useEffect(() => {
+    db.cart.toArray().then(setCartItems);
+    getAddressList();
+    getOfferData();
+  }, []);
+
+  const handleQuantityChange = async (id, newQuantity) => {
+    if (newQuantity < 1) return;
+    await db.cart.update(id, { quantity: newQuantity });
+    const updatedCart = await db.cart.toArray();
+    setCartItems(updatedCart);
+  };
+
+  const calculateTotal = () => {
+    return cartItems.reduce((sum, item) => {
+      const price = Number(item.discountPrice) || 0;
+      const qty = Number(item.quantity) || 1;
+      return sum + price * qty;
+    }, 0);
+  };
+
+  const bagTotal = calculateTotal();
+  const couponDiscount = 0;
+  const grandTotal = bagTotal - couponDiscount;
+
+  console.log(grandTotal);
+
+  const removeFromCart = async (productId) => {
+    try {
+      const item = await db.cart.where("productId").equals(productId).first();
+      if (!item) return;
+      await db.cart.delete(item.id);
+      setCartItems((prev) => prev.filter((i) => i.productId !== productId));
+      toast.success("Item removed");
+    } catch (err) {
+      toast.error("Failed to remove item");
     }
   };
 
-  const addToCart = async () => {
-    if (product?.configuration?.length > 0 && !selectedSize) {
-      setShowSizeSheet(true);
+  const getAddressList = async () => {
+    try {
+      const res = await api.get(`/v1/address/all`, {
+        headers: {
+          "x-api-key":
+            "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+        },
+      });
+      setAddressList(res?.data?.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getOfferData = async () => {
+    try {
+      const res = await api.get(`/v2/giftreward`, {
+        headers: {
+          "x-api-key":
+            "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+        },
+      });
+      setOfferData(res?.data?.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ----------------- Cashfree Integration -----------------
+  const handlePayNow = async () => {
+
+    if (cartItems.length === 0) {
+      toast.warning("Your cart is empty!");
       return;
     }
-    await processAddToCart(selectedSize);
-  };
-
-  const processAddToCart = async (sizeToUse) => {
-    setLoader(true);
-    let capturedImageUrl = "";
 
     try {
-      if (isCustomizable && editorRef.current) {
-        capturedImageUrl = await editorRef.current.captureImage();
+      const res = await api.post(
+        "/v1/orders/create",
+        {
+          // shippingAddressId: addressList[0].id,
+          // billingAddressId: addressList[0].id,
+          paymentMethod: "ONLINE",
+          totalAmount: grandTotal,
+          items: [
+            {
+              name: "Product Name",
+              sku: "SKU123",
+              totalPrice: grandTotal,
+              quantity: 2,
+              categoryId: "H8SZ4VfsFXa4C9cUeonB",
+              isCustomizable: false,
+              discount: 0,
+              tax: 12,
+              hsn: 482090,
+            },
+          ],
+        },
+        {
+          headers: {
+            "x-api-key":
+              "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+          },
+        }
+      );
+
+      const orderData = res?.data?.data;
+      localStorage.setItem("pendingOrderId", orderData.orderId);
+      localStorage.setItem(
+        "pendingCashfreeOrderId",
+        orderData.cashfree.orderId
+      );
+      localStorage.setItem("pendingOrderAmount", String(grandTotal));
+      console.log("Order response:", orderData?.cashfree?.sessionId);
+
+      const paymentSessionId = orderData?.cashfree?.sessionId;
+
+      if (!paymentSessionId) {
+        toast.error("Payment session not generated");
+        return;
       }
+
+      const checkoutOptions = {
+        paymentSessionId,
+        redirectTarget: "_self",
+      };
+
+      cashfree.checkout(checkoutOptions).then((result) => {
+        if (result.error) {
+          toast.error(result.error.message);
+        }
+        if (result.redirect) {
+          console.log("Payment redirection in progress");
+        }
+      });
     } catch (error) {
-      console.error("Capture image error:", error);
-    }
-
-    const payload = {
-      productId: product.id,
-      categoryId: product.categoryId,
-      name: product.name,
-      sku: product.sku,
-      quantity,
-      basePrice: product.basePrice,
-      discountPrice: product.discountedPrice || product.basePrice,
-      totalPrice: (product.discountedPrice || product.basePrice) * quantity,
-      isCustomizable: product.isCustomizable,
-      productImageUrl: capturedImageUrl || product.productImages?.[0] || "",
-      renderedImageUrl: capturedImageUrl,
-      dimensions: {
-        length: product.dimension?.length || 0,
-        width: product.dimension?.width || 0,
-        height: product.dimension?.height || 0,
-        weight: product.dimension?.weight || 0,
-      },
-      options: [{ label: "Size", value: sizeToUse }],
-      addedAt: new Date().toISOString(),
-    };
-
-    try {
-      const existingItem = await db.cart
-        .where("productId")
-        .equals(product.id)
-        .first();
-
-      if (existingItem) {
-        await db.cart.update(existingItem.id, {
-          quantity: existingItem.quantity + quantity,
-          totalPrice: (existingItem.discountPrice || existingItem.basePrice) * (existingItem.quantity + quantity),
-          productImageUrl: capturedImageUrl || existingItem.productImageUrl,
-        });
-      } else {
-        await db.cart.add(payload);
-      }
-
-      const updatedCartItems = await db.cart.toArray();
-      updateCart(updatedCartItems.length);
-      setShowSuccessCart(true);
-    } catch (err) {
-      console.error("Dexie error:", err);
-      toast.error("Failed to add to cart");
-    } finally {
-      setLoader(false);
+      console.error("Cashfree error:", error);
+      toast.error("Failed to initiate payment.");
     }
   };
 
-  const handleWishlistClick = async () => {
+  const addToWishlist = async (productId) => {
     if (!accessToken) {
       toast.warning("Please login to Add to Wishlist");
       return;
     }
     try {
-      const res = await api.post(
-        `/v2/wishlist`,
-        { productId: product.id },
+      await api.post(
+        `${apiUrl}/v2/wishlist`,
+        { productId },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            "x-api-key": "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
+            "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
           },
         }
       );
-      if (res.status === 200) {
-        setIsWishlisted(true);
-        toast.success("Added to wishlist!");
-      }
+      toast.success("Added to wishlist!");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to add to wishlist");
+      toast.error("Failed to add to wishlist");
     }
   };
-
-  const handleShare = async () => {
-    const shareUrl = window.location.href;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product?.name || "Check this out!",
-          url: shareUrl,
-        });
-      } catch (error) { console.log("Share cancelled", error); }
-    } else {
-      window.open(`https://wa.me/?text=${encodeURIComponent(shareUrl)}`, "_blank");
-    }
-  };
-
-  // --- Effects ---
-
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const res = await api.get(`/v2/product/${id}`, {
-          headers: { "x-api-key": "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10" },
-        });
-        const data = res?.data?.data;
-        setProduct(data);
-        setIsCustomizable(!!data?.isCustomizable);
-        setRelatedId(data?.id);
-        setIsWishlisted(data?.isInWishlist);
-      } catch (error) {
-        toast.error("Failed to fetch product.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (id) fetchProduct();
-  }, [id]);
-
-  useEffect(() => {
-    if (relatedId) {
-      const getRelatedProduct = async () => {
-        try {
-          const res = await api.get(`/v2/product/${relatedId}/related`, {
-            headers: { "x-api-key": "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10" },
-          });
-          setRelatedData(res?.data?.data);
-        } catch (error) { console.log("Related fetch error", error); }
-      };
-      getRelatedProduct();
-    }
-  }, [relatedId]);
-
-  if (loading && !product) return <ProductDetailsShimmer />;
 
   return (
-    <>
-      <div className={styles.container}>
-        <ToastContainer position="top-right" autoClose={2000} />
+    <div className={styles.cartPage}>
+      <ToastContainer position="top-right" autoClose={2000} />
+      {cartItems?.length > 0 ? (
+        <>
+          <button className={styles.iconBtn} onClick={() => router.push("/")}>
+            <ChevronLeft size={22} />
+          </button>
+          <CartRewards totalAmount={bagTotal} />
 
-        {/* Header Icons */}
-        <div className={styles.back} onClick={() => router.back()}>
-          <ChevronLeft size={30} />
-        </div>
-        <div className={styles.mobileIconsContainer}>
-          <div className={styles.mobileIconsRight}>
-            <button className={styles.mobileIcon} onClick={() => router.push("/cart")}>
-              {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
-              <Image src={bag} alt="bag" />
-            </button>
-            <button className={styles.mobileIcon} onClick={handleWishlistClick}>
-              <Heart size={40} stroke={isWishlisted ? "red" : "black"} fill={isWishlisted ? "red" : "transparent"} />
-            </button>
-            <button className={styles.mobileIcon} onClick={handleShare}>
-              <Image src={share} alt="share" />
-            </button>
-          </div>
-        </div>
+          <div className={styles.cartContainer}>
+            <div className={styles.cartItems}>
+              {cartItems.map((item) => (
+                <div key={item.id} className={styles.cartItem}>
+                  <div className={styles.itemImage}>
+                    <img src={item.productImageUrl} alt={item.name} />
+                  </div>
 
-        {/* Product Visual Section */}
-        {product?.isCustomizable ? (
-          <ShirtEditor product={product} ref={editorRef} />
-        ) : (
-          <Image
-            src={product?.productImages[0]}
-            alt="product"
-            width={500}
-            height={600}
-            className={styles.mainImage}
-            priority
-          />
-        )}
+                  <div className={styles.itemDetails}>
+                    <div className={styles.itemHeader}>
+                      <h3 className={styles.itemName}>{item.name}</h3>
+                      <button
+                        onClick={() => removeFromCart(item?.productId)}
+                        className={styles.removeBtn}
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
 
-        {/* Info Section */}
-        <div className={`${styles.infoSection} ${!isCustomizable && styles.infoSection_img}`}>
-          <div className={styles.priceSection}>
-            <h1>{product?.name}</h1>
-          </div>
-          <div className={styles.dis_price}>
-            <p className={styles.discountedPrice}>₹ {product?.discountedPrice}</p>
-            <p className={styles.basePrice}>₹ {product?.basePrice}</p>
-            {product?.discountedPrice && product?.basePrice && (
-              <span className={styles.offerTag}>
-                {Math.round(((product.basePrice - product.discountedPrice) / product.basePrice) * 100)}% OFF
-              </span>
-            )}
-          </div>
+                    <div className={styles.itemMeta}>
+                      <span>{item.options?.[0]?.value} |</span>
+                      <span className={styles.quantitySelector}>
+                        QTY |
+                        <select
+                          value={item.quantity}
+                          onChange={(e) =>
+                            handleQuantityChange(
+                              item.id,
+                              parseInt(e.target.value)
+                            )
+                          }
+                        >
+                          {[...Array(10).keys()].map((num) => (
+                            <option key={num + 1} value={num + 1}>
+                              {num + 1}
+                            </option>
+                          ))}
+                        </select>
+                      </span>
+                    </div>
 
-          {/* Size Selection */}
-          {product?.configuration?.[0]?.options?.length > 0 && (
-            <div className={styles.sizes}>
-              <h4>SELECT SIZE</h4>
-              {sizeInfo && (
-                <div className={styles.sizeDetailsBox}>
-                  <span>Chest: {sizeInfo?.options[0]?.value} cm</span>
-                  <span>Length: {sizeInfo?.options[1]?.value} cm</span>
-                  {sizeInfo?.options.length > 2 && (
-                    <span>Sleeves: {sizeInfo?.options[2]?.value} cm</span>
-                  )}
+                    <div className={styles.itemFooter}>
+                      <button
+                        className={styles.wishlistBtn}
+                        onClick={() => addToWishlist(item?.productId)}
+                      >
+                        MOVE TO WISHLIST
+                      </button>
+                      <span className={styles.itemPrice}>
+                        <span className={styles.strikeValue}>
+                          ₹{item?.basePrice}
+                        </span>{" "}
+                        <span>₹{item?.discountPrice}</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className={styles.sizeOptions}>
-                {product?.configuration[0].options.map((s) => (
-                  <button
-                    key={s.value}
-                    className={`${styles.sizeBtn} ${selectedSize === s.value ? styles.activeSize : ""}`}
-                    onClick={() => handleSizeSelect(s.value)}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className={styles.button_wrapper}>
-            <button
-              className={styles.addToCart}
-              onClick={addToCart}
-              disabled={loader}
-            >
-              {loader ? "ADDING..." : "ADD TO BAG"}
-            </button>
-          </div>
-
-          {/* Details Accordion */}
-          <div className={styles.accordion}>
-            {[
-              { title: "DETAILS", content: product?.description },
-              { title: "CARE", content: product?.care },
-            ].map((item, i) => (
-              <div key={i} className={styles.accordionItem} onClick={() => setActiveSection(activeSection === i ? null : i)}>
-                <div className={styles.accordionHeader}>
-                  <h3>{item.title}</h3>
-                  {activeSection === i ? <Minus size={20} /> : <Plus size={20} />}
-                </div>
-                <div className={`${styles.accordionContent} ${activeSection === i ? styles.active : ""}`}>
-                  <p>{item.content}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Size Selection Sheet (Triggered if no size selected) */}
-          <BottomSheet open={showSizeSheet} onClose={() => setShowSizeSheet(false)}>
-            <h3 style={{ textAlign: "center", marginBottom: "15px" }}>SELECT A SIZE</h3>
-            <div className={styles.sizeOptionsSheet}>
-              {product?.configuration?.[0]?.options.map((s) => (
-                <button
-                  key={s.value}
-                  onClick={() => {
-                    handleSizeSelect(s.value, true); // true = auto add to cart
-                    setShowSizeSheet(false);
-                  }}
-                  className={`${styles.sizeBtn} ${selectedSize === s.value ? styles.activeSize : ""}`}
-                >
-                  {s.label}
-                </button>
               ))}
             </div>
-          </BottomSheet>
 
-          {/* Success Sheet */}
-          <BottomSheet open={showSuccessCart} onClose={() => setShowSuccessCart(false)}>
-            <AddToCartSuccessSheet relatedData={relatedData} />
-          </BottomSheet>
-        </div>
-      </div>
+            <div className={styles.rightSection}>
+              <DefaultAddress
+                addressList={addressList}
+                onChange={() => router.push("/address")}
+              />
+              <PriceList
+                bagTotal={bagTotal}
+                grandTotal={grandTotal}
+                handlePayNow={handlePayNow}
+                offerData={offerData}
+              />
+            </div>
+          </div>
 
-      <section style={{ width: "100%", overflowX: "auto" }}>
-        <Suggested relatedData={relatedData} />
-      </section>
-    </>
+          <DynamicModal
+            open={isLoginModalVisible}
+            onClose={() => setIsLoginModalVisible(false)}
+          >
+            <LoginForm
+              onContinue={handleContinue}
+              setIsLoginModalVisible={setIsLoginModalVisible}
+              setIsLoggedIn={setIsLoggedIn}
+            />
+          </DynamicModal>
+        </>
+      ) : (
+        <NoResult
+          title="Oops! Your Cart is Empty"
+          description="Explore our products and find the perfect items for you."
+          buttonText="Explore"
+          onButtonClick={() => router.push("/")}
+        />
+      )}
+    </div>
   );
 };
 
-export default ProductDetails;
+export default Cart;
