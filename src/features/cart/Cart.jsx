@@ -22,7 +22,6 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [addressList, setAddressList] = useState([]);
   const [offerData, setOfferData] = useState([]);
-  const [cashfree, setCashfree] = useState(null);
   const router = useRouter();
   const accessToken = Cookies.get("idToken");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -30,27 +29,10 @@ const Cart = () => {
   const [cartLoader, setCartLodaer] = useState(false);
   const [showCartUI, setShowCartUI] = useState(true);
 
-  console.log(cartItems, "sksksiisoueuyyexxxx");
-
-  // useEffect(() => {
-  //   const token = Cookies.get("idToken");
-  //   setIsLoggedIn(!!token);
-  // }, []);
-
   const handleContinue = () => {
     setIsLoginModalVisible(false);
     setIsLoggedIn(true);
   };
-
-  useEffect(() => {
-    const initCashfree = async () => {
-      const cf = await load({
-        mode: "production",
-      });
-      setCashfree(cf);
-    };
-    initCashfree();
-  }, []);
 
   useEffect(() => {
     db.cart.toArray().then(setCartItems);
@@ -77,15 +59,12 @@ const Cart = () => {
   const couponDiscount = 0;
   const grandTotal = bagTotal - couponDiscount;
 
-  console.log(grandTotal);
-
   const removeFromCart = async (productId) => {
     try {
       const item = await db.cart.where("productId").equals(productId).first();
       if (!item) return;
       await db.cart.delete(item.id);
       setCartItems((prev) => prev.filter((i) => i.productId !== productId));
-      // toast.success("Item removed");
     } catch (err) {
       toast.error("Failed to remove item");
     }
@@ -119,8 +98,6 @@ const Cart = () => {
     }
   };
 
-  console.log(cartItems[0]?.fullProductUrl, "dsdsssssssssssss");
-
   const orderPayloadItems = cartItems.map((item) => ({
     name: item.name,
     sku: item.sku || item.productId,
@@ -135,7 +112,6 @@ const Cart = () => {
   }));
 
   const customizableItem = cartItems.find((item) => item.isCustomizable);
-  console.log(customizableItem?.illustrationImage, "jdksjdkjsduuuyyyy");
   const uploadImagePayload = customizableItem
     ? {
         printText: customizableItem.presetText || "Empty Text",
@@ -192,27 +168,59 @@ const Cart = () => {
 
       const orderData = orderRes?.data?.data;
       const paymentSessionId = orderData?.cashfree?.sessionId;
+      const cashfreeOrderId = orderData?.cashfree?.orderId;
+      const backendOrderId = orderData?.orderId;
 
       if (!paymentSessionId) {
         toast.error("Payment session not generated");
+        setCartLodaer(false);
         return;
       }
 
-      // 🔥 SHOW CHECKOUT, HIDE CART
+      // Store order data in localStorage for order-success page
+      localStorage.setItem("pendingOrderId", backendOrderId);
+      localStorage.setItem("pendingCashfreeOrderId", cashfreeOrderId);
+      localStorage.setItem("pendingOrderAmount", grandTotal.toString());
+
+      console.log("Stored order data:", {
+        pendingOrderId: backendOrderId,
+        pendingCashfreeOrderId: cashfreeOrderId,
+        pendingOrderAmount: grandTotal,
+      });
+
+      // Hide cart UI and show checkout
       setShowCartUI(false);
+      setCartLodaer(false);
 
-      const cashfree = Cashfree({ mode: "production" });
+      const cashfree = await load({ mode: "production" });
 
-      cashfree.checkout({
-        paymentSessionId,
-        redirectTarget: document.getElementById("cashfree-dropin"),
-        returnUrl: `${"https://onrise.in"}/order-success?order_id={order_id}`,
+      // Embedded checkout with proper callback structure
+      const checkoutOptions = {
+        paymentSessionId: paymentSessionId,
+        redirectTarget: document.getElementById("cashfree-dropin"), // Your embedded div
+      };
+
+      cashfree.checkout(checkoutOptions).then((result) => {
+        if (result.error) {
+          console.error("SDK Error:", result.error);
+          toast.error(result.error.message);
+          setShowCartUI(true);
+        }
+
+        if (result.paymentDetails) {
+          console.log("Payment completed, checking status...");
+          window.location.href = `/order-success?order_id=${cashfreeOrderId}`;
+        }
+
+        if (result.redirect) {
+          console.log("SDK handled redirection automatically");
+        }
       });
     } catch (error) {
       console.error("Payment error:", error);
       toast.error("Failed to initiate payment");
-    } finally {
       setCartLodaer(false);
+      setShowCartUI(true);
     }
   };
 
@@ -228,7 +236,8 @@ const Cart = () => {
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            "x-api-key": process.env.NEXT_PUBLIC_API_KEY,
+            "x-api-key":
+              "454ccaf106998a71760f6729e7f9edaf1df17055b297b3008ff8b65a5efd7c10",
           },
         }
       );
@@ -240,127 +249,127 @@ const Cart = () => {
 
   return (
     <>
-      <div
-        id="cashfree-dropin"
-        style={{
-          width: "100%",
-          height: "auto",
-        }}
-      />
-      {
-        showCartUI && 
-         <div className={styles.cartPage}>
-        <ToastContainer position="top-right" autoClose={2000} />
-        {cartItems?.length > 0 ? (
-          <>
-            <button className={styles.iconBtn} onClick={() => router.push("/")}>
-              <ChevronLeft size={22} />
-            </button>
-            <CartRewards totalAmount={bagTotal} />
+      {!showCartUI && (
+    <div 
+      id="cashfree-dropin" 
+      className={styles.paymentContainer} 
+    />
+  )}
+      {showCartUI && (
+        <div className={styles.cartPage}>
+          <ToastContainer position="top-right" autoClose={2000} />
+          {cartItems?.length > 0 ? (
+            <>
+              <button
+                className={styles.iconBtn}
+                onClick={() => router.push("/")}
+              >
+                <ChevronLeft size={22} />
+              </button>
+              <CartRewards totalAmount={bagTotal} />
 
-            <div className={styles.cartContainer}>
-              <div className={styles.cartItems}>
-                {cartItems.map((item) => (
-                  <div key={item.id} className={styles.cartItem}>
-                    <div className={styles.itemImage}>
-                      <img src={item.productImageUrl} alt={item.name} />
-                    </div>
-
-                    <div className={styles.itemDetails}>
-                      <div className={styles.itemHeader}>
-                        <h3 className={styles.itemName}>{item.name}</h3>
-                        <button
-                          onClick={() => removeFromCart(item?.productId)}
-                          className={styles.removeBtn}
-                        >
-                          <Trash2 size={20} />
-                        </button>
+              <div className={styles.cartContainer}>
+                <div className={styles.cartItems}>
+                  {cartItems.map((item) => (
+                    <div key={item.id} className={styles.cartItem}>
+                      <div className={styles.itemImage}>
+                        <img src={item.productImageUrl} alt={item.name} />
                       </div>
 
-                      <div className={styles.itemMeta}>
-                        <span>{item.options?.[0]?.value} |</span>
-                        <span className={styles.quantitySelector}>
-                          QTY |
-                          <select
-                            value={item.quantity}
-                            onChange={(e) =>
-                              handleQuantityChange(
-                                item.id,
-                                parseInt(e.target.value)
-                              )
-                            }
+                      <div className={styles.itemDetails}>
+                        <div className={styles.itemHeader}>
+                          <h3 className={styles.itemName}>{item.name}</h3>
+                          <button
+                            onClick={() => removeFromCart(item?.productId)}
+                            className={styles.removeBtn}
                           >
-                            {[...Array(10).keys()].map((num) => (
-                              <option key={num + 1} value={num + 1}>
-                                {num + 1}
-                              </option>
-                            ))}
-                          </select>
-                        </span>
-                      </div>
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
 
-                      <div className={styles.itemFooter}>
-                        <button
-                          className={styles.wishlistBtn}
-                          onClick={() => addToWishlist(item?.productId)}
-                        >
-                          MOVE TO WISHLIST
-                        </button>
-                        <span className={styles.itemPrice}>
-                          <span className={styles.strikeValue}>
-                            ₹{item?.basePrice}
-                          </span>{" "}
-                          <span>₹{item?.discountPrice}</span>
-                        </span>
+                        <div className={styles.itemMeta}>
+                          <span>{item.options?.[0]?.value} |</span>
+                          <span className={styles.quantitySelector}>
+                            QTY |
+                            <select
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleQuantityChange(
+                                  item.id,
+                                  parseInt(e.target.value)
+                                )
+                              }
+                            >
+                              {[...Array(10).keys()].map((num) => (
+                                <option key={num + 1} value={num + 1}>
+                                  {num + 1}
+                                </option>
+                              ))}
+                            </select>
+                          </span>
+                        </div>
+
+                        <div className={styles.itemFooter}>
+                          <button
+                            className={styles.wishlistBtn}
+                            onClick={() => addToWishlist(item?.productId)}
+                          >
+                            MOVE TO WISHLIST
+                          </button>
+                          <span className={styles.itemPrice}>
+                            <span className={styles.strikeValue}>
+                              ₹{item?.basePrice}
+                            </span>{" "}
+                            <span>₹{item?.discountPrice}</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+
+                <div className={styles.rightSection}>
+                  <DefaultAddress
+                    addressList={addressList}
+                    onChange={() => router.push("/address")}
+                  />
+                  <PriceList
+                    bagTotal={bagTotal}
+                    grandTotal={grandTotal}
+                    handlePayNow={handlePayNow}
+                    offerData={offerData}
+                  />
+                </div>
               </div>
 
-              <div className={styles.rightSection}>
-                <DefaultAddress
-                  addressList={addressList}
-                  onChange={() => router.push("/address")}
+              <DynamicModal
+                open={isLoginModalVisible}
+                onClose={() => setIsLoginModalVisible(false)}
+              >
+                <LoginForm
+                  onContinue={handleContinue}
+                  setIsLoginModalVisible={setIsLoginModalVisible}
+                  setIsLoggedIn={setIsLoggedIn}
                 />
-                <PriceList
-                  bagTotal={bagTotal}
-                  grandTotal={grandTotal}
-                  handlePayNow={handlePayNow}
-                  offerData={offerData}
-                />
-              </div>
-            </div>
+              </DynamicModal>
 
-            <DynamicModal
-              open={isLoginModalVisible}
-              onClose={() => setIsLoginModalVisible(false)}
-            >
-              <LoginForm
-                onContinue={handleContinue}
-                setIsLoginModalVisible={setIsLoginModalVisible}
-                setIsLoggedIn={setIsLoggedIn}
-              />
-            </DynamicModal>
-
-            <DynamicModal
-              open={cartLoader}
-              onClose={() => setCartLodaer(false)}
-            >
-              <AddToBagLoader />
-            </DynamicModal>
-          </>
-        ) : (
-          <NoResult
-            title="Oops! Your Cart is Empty"
-            description="Explore our products and find the perfect items for you."
-            buttonText="Explore"
-            onButtonClick={() => router.push("/")}
-          />
-        )}
-      </div>
-      }
-     
+              <DynamicModal
+                open={cartLoader}
+                onClose={() => setCartLodaer(false)}
+              >
+                <AddToBagLoader />
+              </DynamicModal>
+            </>
+          ) : (
+            <NoResult
+              title="Oops! Your Cart is Empty"
+              description="Explore our products and find the perfect items for you."
+              buttonText="Explore"
+              onButtonClick={() => router.push("/")}
+            />
+          )}
+        </div>
+      )}
     </>
   );
 };
