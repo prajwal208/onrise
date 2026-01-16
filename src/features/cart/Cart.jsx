@@ -98,6 +98,7 @@ const Cart = () => {
     }
   };
 
+  console.log(cartItems[0]?.productImageUrl, "djsdjsduiuuiuui");
   const orderPayloadItems = cartItems.map((item) => ({
     name: item.name,
     sku: item.sku || item.productId,
@@ -105,22 +106,21 @@ const Cart = () => {
     quantity: item.quantity,
     categoryId: item.categoryId,
     isCustomizable: !!item.isCustomizable,
-    productImageUrl: item?.fullProductUrl,
+    productImageUrl: item?.renderedImageUrl,
     discount: item.discount || 0,
     tax: item.tax || 0,
     hsn: item.hsn || null,
   }));
 
-  const customizableItem = cartItems.find((item) => item.isCustomizable);
-  const uploadImagePayload = customizableItem
-    ? {
-        printText: customizableItem.presetText || "Empty Text",
-        textColor: customizableItem.textColor || "",
-        fontFamily: customizableItem.fontFamily || "",
-        fontSize: customizableItem.fontSize || "",
-        illustrationImage: customizableItem?.illustrationImage,
-      }
-    : null;
+  const itemsToUpload = cartItems.map((item) => ({
+    printingImgText: {
+      printText: item.presetText || "Empty Text",
+      textColor: item.textColor || "",
+      fontFamily: item.fontFamily || "",
+      fontSize: item.fontSize || "",
+      illustrationImage: item.illustrationImage,
+    },
+  }));
 
   // ----------------- Cashfree Integration -----------------
   const handlePayNow = async () => {
@@ -133,10 +133,10 @@ const Cart = () => {
       setCartLodaer(true);
       let renderedImageUrl = null;
 
-      if (uploadImagePayload) {
+      if (itemsToUpload) {
         const uploadRes = await api.post(
           "/v1/cart/upload-image",
-          { printingImgText: uploadImagePayload },
+          { itemsData: itemsToUpload },
           {
             headers: {
               "x-api-key":
@@ -182,12 +182,6 @@ const Cart = () => {
       localStorage.setItem("pendingCashfreeOrderId", cashfreeOrderId);
       localStorage.setItem("pendingOrderAmount", grandTotal.toString());
 
-      console.log("Stored order data:", {
-        pendingOrderId: backendOrderId,
-        pendingCashfreeOrderId: cashfreeOrderId,
-        pendingOrderAmount: grandTotal,
-      });
-
       // Hide cart UI and show checkout
       setShowCartUI(false);
       setCartLodaer(false);
@@ -203,12 +197,11 @@ const Cart = () => {
       cashfree.checkout(checkoutOptions).then((result) => {
         if (result.error) {
           console.error("SDK Error:", result.error);
-          toast.error(result.error.message);
+          // toast.error(result.error.message);
           setShowCartUI(true);
         }
 
         if (result.paymentDetails) {
-          console.log("Payment completed, checking status...");
           window.location.href = `/order-success?order_id=${cashfreeOrderId}`;
         }
 
@@ -249,12 +242,17 @@ const Cart = () => {
 
   return (
     <>
-      {!showCartUI && (
-    <div 
-      id="cashfree-dropin" 
-      className={styles.paymentContainer} 
-    />
-  )}
+      <div
+        id="cashfree-dropin"
+        style={{
+          width: "100%",
+          height: showCartUI ? "0" : "auto",
+          display: showCartUI ? "none" : "block",
+          display: "flex",
+          justifyContent: "center",
+          overflow: "hidden",
+        }}
+      />
       {showCartUI && (
         <div className={styles.cartPage}>
           <ToastContainer position="top-right" autoClose={2000} />
